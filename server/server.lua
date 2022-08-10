@@ -43,7 +43,7 @@ end)
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         Citizen.Wait(100)
-        SetConvar("sonorancms_api_key", Config.APIKey)
-        SetConvar("sonorancms_comm_id", Config.CommID)
+        SetConvar("SONORAN_CMS_API_KEY", Config.APIKey)
+        SetConvar("SONORAN_CMS_COMMUNITY_ID", Config.CommID)
     end
 end)
