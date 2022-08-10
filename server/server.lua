@@ -3,7 +3,7 @@ local plugin_handlers = {}
 SetHttpHandler(function(req, res)
     local path = req.path
     local method = req.method
-    if method == "POST" and path == '/event' then
+    if method == "POST" and path == '/events' then
         req.setDataHandler(function(data)
             if not data then
                 res.send(json.encode({
@@ -18,11 +18,21 @@ SetHttpHandler(function(req, res)
                 }))
                 return
             end
-            if body.key and body.key:upper() == Config.apiKey:upper() then
-                TriggerClientEvent(plugin_handlers[body.type], body)
-                res.send('ok')
+            if body.key and body.key:upper() == Config.APIKey:upper() then
+                if plugin_handlers[body.type] ~= nil then
+                    TriggerEvent(plugin_handlers[body.type], body)
+                    res.send('ok')
+                    return
+                else
+                    res.send("Event not registered")
+                end
+            else
+                res.send('Bad API Key')
+                return
             end
         end)
+    else
+        res.send('Bad endpoint')
     end
 end)
 
