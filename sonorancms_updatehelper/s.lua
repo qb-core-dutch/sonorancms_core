@@ -9,7 +9,7 @@ CreateThread(function()
 		ExecuteCommand('refresh')
 		Wait(1000)
 		if line == 'core' then
-			for k, v in pairs(ManagedResources) do
+			for _, v in pairs(ManagedResources) do
 				if GetResourceState(v) ~= 'started' then
 					print(('Not restarting resource %s as it is not started. This may be fine. State: %s'):format(v, GetResourceState(v)))
 				else

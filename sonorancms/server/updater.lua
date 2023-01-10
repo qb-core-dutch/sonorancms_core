@@ -24,7 +24,7 @@ end)
 
 local function doUpdate(latest)
 	-- best way to do this...
-	local releaseUrl = ('https://github.com/Sonoran-Software/SonoranCADLuaIntegration/releases/download/v%s/sonorancad-%s.zip'):format(latest, latest)
+	local releaseUrl = ('https://github.com/Jordan2139/sonorancms_core/releases/download/v%s/sonorancms_core-%s.zip'):format(latest, latest)
 	PerformHttpRequest(releaseUrl, function(code, data, _)
 		if code == 200 then
 			local savePath = GetResourcePath(GetCurrentResourceName()) .. '/update.zip'
@@ -41,9 +41,6 @@ local function doUpdate(latest)
 end
 
 function RunAutoUpdater(manualRun)
-	if Config.updateBranch == nil then
-		return
-	end
 	local f = LoadResourceFile(GetCurrentResourceName(), '/update.zip')
 	if f ~= nil then
 		-- remove the update file and stop the helper
@@ -53,7 +50,7 @@ function RunAutoUpdater(manualRun)
 	end
 	local versionFile = Config.autoUpdateUrl
 	if versionFile == nil then
-		versionFile = 'https://raw.githubusercontent.com/Sonoran-Software/SonoranCADLuaIntegration/{branch}/sonorancad/version.json'
+		versionFile = 'https://raw.githubusercontent.com/Jordan2139/sonorancms_core/master/sonorancms/version.json'
 	end
 	versionFile = string.gsub(versionFile, '{branch}', Config.updateBranch)
 	local myVersion = GetResourceMetadata(GetCurrentResourceName(), 'version', 0)
