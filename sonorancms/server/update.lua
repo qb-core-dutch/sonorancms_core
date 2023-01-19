@@ -1,6 +1,6 @@
 local helper_name = 'sonorancms_updatehelper'
-local update_url = 'https://github.com/Jordan2139/sonorancms_core/releases/download/%s/sonorancms_core-%s.zip'
-local version_url = 'https://raw.githubusercontent.com/Jordan2139/sonorancms_core/master/sonorancms/version.json'
+local update_url = 'https://github.com/Sonoran-Software/sonorancms_core/releases/download/%s/sonorancms_core-%s.zip'
+local version_url = 'https://raw.githubusercontent.com/Sonoran-Software/sonorancms_core/master/sonorancms/version.json'
 local pendingRestart = false
 
 local function doUnzip(path)
