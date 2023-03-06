@@ -1,7 +1,6 @@
 {
     "license": "UNLICENSED",
     "dependencies": {
-        "extract-zip": "https://github.com/hickorysb/extract-zip",
-        "yauzl": "https://github.com/nalhabash/yauzl/#patch-fd-slicer"
+        "unzipper": "https://github.com/ZJONSSON/node-unzipper"
     }
 }

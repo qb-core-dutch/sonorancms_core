@@ -3,9 +3,9 @@ local update_url = 'https://github.com/Sonoran-Software/sonorancms_core/releases
 local version_url = 'https://raw.githubusercontent.com/Sonoran-Software/sonorancms_core/master/sonorancms/version.json'
 local pendingRestart = false
 
-local function doUnzip(path)
-	local unzipPath = GetResourcePath(GetCurrentResourceName()) .. '/../'
-	exports[GetCurrentResourceName()]:UnzipFile(path, unzipPath)
+function doUnzip(path)
+	local unzipPath = GetResourcePath(GetCurrentResourceName()) .. '/../../'
+	exports[GetCurrentResourceName()]:UnzipFile(path, unzipPath, 'core')
 end
 
 exports('unzipCoreCompleted', function(success, error)
@@ -43,12 +43,12 @@ local function doUpdate(latest)
 
 end
 
-local function FileExists(name)
+function FileExists(name)
 	local f = io.open(name, 'r')
 	return f ~= nil and io.close(f)
 end
 
-local function CopyFile(old_path, new_path)
+function CopyFile(old_path, new_path)
 	local old_file = io.open(old_path, 'rb')
 	local new_file = io.open(new_path, 'wb')
 	local old_file_sz, new_file_sz
