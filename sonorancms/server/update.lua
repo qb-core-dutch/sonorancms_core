@@ -92,9 +92,6 @@ local function RunAutoUpdater()
 	if FileExists(GetResourcePath(helper_name) .. '/config.lock') then
 		os.remove(GetResourcePath(helper_name) .. '/config.lock')
 	end
-	if FileExists(GetResourcePath(GetCurrentResourceName()) .. '/package.json') then
-		os.remove(GetResourcePath(GetCurrentResourceName()) .. '/package.json')
-	end
 	local myVersion = GetResourceMetadata(GetCurrentResourceName(), 'version', 0)
 
 	PerformHttpRequest(version_url, function(code, data, _)
