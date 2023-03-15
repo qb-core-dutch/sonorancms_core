@@ -42,7 +42,7 @@ end)
 
 RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
 	local pluginVersion, pluginRepo
-	local pluginPayload = {apiKey = Config.APIKey, communityId = Config.CommID, apiUrl = Config.apiUrl, apiIdType = Config.apiIdType, serverId = Config.serverId}
+	local pluginPayload = {apiKey = Config.APIKey, communityId = Config.CommID, apiUrl = Config.apiUrl, apiIdType = Config.apiIdType, serverId = Config.serverId, debugMode = Config.debug_mode}
 	TriggerEvent('SonoranCMS::Plugins::GiveInfo', pluginName, pluginPayload)
 	pluginVersion = GetResourceMetadata(pluginName, 'version')
 	pluginRepo = GetResourceMetadata(pluginName, 'git_repo')
