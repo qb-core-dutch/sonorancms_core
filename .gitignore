@@ -1,5 +1,4 @@
 .luacheckrc
 /sonorancms/config.lua
-node_modules
 yarn.lock
 .yarn.installed
