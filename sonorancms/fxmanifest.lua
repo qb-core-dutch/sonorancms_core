@@ -2,8 +2,8 @@ fx_version 'cerulean'
 games {'gta5'}
 
 author 'Sonoran Software Systems'
-real_name 'Sonoran CMS Permissions'
-description 'Sonoran CMS to Ace permissions translation layer'
+real_name 'Sonoran CMS FiveM Integration'
+description 'Sonoran CMS to FiveM translation layer'
 version '1.1.0'
 lua54 'yes'
 
