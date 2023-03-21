@@ -11,7 +11,7 @@ local function RunAddonAutoUpdater(pluginName, latestVersion)
 		os.remove(GetResourcePath(GetCurrentResourceName()) .. '/config.lock')
 	end
 	local pluginRepo = GetResourceMetadata(pluginName, 'git_repo')
-	local releaseUrl = (pluginRepo .. '/releases/download/v%s/latest.zip'):format(latestVersion)
+	local releaseUrl = pluginRepo .. '/archive/refs/tags/latest.zip'
 	PerformHttpRequest(releaseUrl, function(code, data, _)
 		if code == 200 then
 			local savePath = GetResourcePath(GetCurrentResourceName()) .. '/addonupdates/' .. pluginName .. '.zip'
