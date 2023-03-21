@@ -10,7 +10,7 @@ end
 
 exports('unzipCoreCompleted', function(success, error)
 	if success then
-		if GetNumPlayerIndices() > 0 then
+		if GetNumPlayerIndices() > 0 and not Config.restartWithPlayers then
 			pendingRestart = true
 			Utilities.Logging.logInfo('Delaying auto-update until server is empty.')
 			return
@@ -137,7 +137,7 @@ AddEventHandler(GetCurrentResourceName() .. '::StartUpdateLoop', function()
 	Citizen.CreateThread(function()
 		while true do
 			if pendingRestart then
-				if GetNumPlayerIndices() > 0 then
+				if GetNumPlayerIndices() > 0 and not Config.restartWithPlayers then
 					Utilities.Logging.logWarn('An update has been applied to ' .. GetResourceMetadata(GetCurrentResourceName(), 'real_name', 0) .. ' but requires a resource restart.'
 									                          .. ' Restart delayed until server is empty.')
 				else

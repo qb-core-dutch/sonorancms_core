@@ -1,3 +1,5 @@
+local loadedPlugins = {}
+
 local function RunAddonAutoUpdater(pluginName, latestVersion)
 	local f = LoadResourceFile(GetResourcePath(GetCurrentResourceName()) .. '/addonupdates/' .. pluginName .. '.zip')
 	if f ~= nil then
@@ -41,6 +43,9 @@ exports('unzipAddonCompleted', function(success, error, pluginName)
 end)
 
 RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
+	if loadedPlugins[pluginName] == nil then
+		loadedPlugins[1] = pluginName
+	end
 	local pluginVersion, pluginRepo
 	local pluginPayload = {apiKey = Config.APIKey, communityId = Config.CommID, apiUrl = Config.apiUrl, apiIdType = Config.apiIdType, serverId = Config.serverId, debugMode = Config.debug_mode}
 	TriggerEvent('SonoranCMS::Plugins::GiveInfo', pluginName, pluginPayload)
@@ -66,7 +71,7 @@ RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
 					if currentVersion < latestVersion then
 						if Config.allowAutoUpdate then
 							Utilities.Logging.logInfo(pluginName .. ' is out of date, running auto update now...')
-							RunAddonAutoUpdater(pluginName, versionLineSplit[2] )
+							RunAddonAutoUpdater(pluginName, versionLineSplit[2])
 						else
 							Utilities.Logging.logInfo('New update available for ' .. pluginName .. '. Current version: ' .. versionLineSplit[2] .. ' | Latest Version: ' .. pluginVersion .. ' | Download new version: '
 											                          .. pluginRepo .. '/releases/tag/latest')
@@ -80,4 +85,15 @@ RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
 			Utilities.Logging.logError('An error occured while checking version... Error code: ' .. code)
 		end
 	end)
+end)
+
+Citizen.CreateThread(function()
+	while true do
+		Wait(10000)
+		for k, v in ipairs(loadedPlugins) do
+			local pluginName = tostring(v)
+			TriggerEvent('SonoranCMS::Plugins::Loaded', pluginName)
+		end
+		Wait(60000 * 10)
+	end
 end)
