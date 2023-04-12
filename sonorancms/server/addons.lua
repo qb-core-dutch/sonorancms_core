@@ -15,7 +15,7 @@ local function RunAddonAutoUpdater(pluginName, latestVersion)
 	PerformHttpRequest(releaseUrl, function(code, data, _)
 		if code == 200 then
 			local savePath = GetResourcePath(GetCurrentResourceName()) .. '/addonupdates/' .. pluginName .. '.zip'
-			local unzipPath = GetResourcePath(pluginName) .. '/../'
+			local unzipPath = GetResourcePath(pluginName)
 			local f = assert(io.open(savePath, 'wb'))
 			f:write(data)
 			f:close()
@@ -68,6 +68,8 @@ RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
 						table.insert(versionLineSplit, w)
 					end
 					local latestVersion = versionLineSplit[2]:gsub('[.]', '')
+					print('Version: ' .. currentVersion)
+					print('Latest Version: ' .. latestVersion)
 					if currentVersion < latestVersion then
 						if Config.allowAutoUpdate then
 							Utilities.Logging.logInfo(pluginName .. ' is out of date, running auto update now...')
