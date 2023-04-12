@@ -36,6 +36,7 @@ exports('unzipAddonCompleted', function(success, error, pluginName)
 		end
 		Utilities.Logging.logWarn('Auto-restarting addon...')
 		Citizen.Wait(5000)
+		ExecuteCommand('refresh')
 		ExecuteCommand('ensure ' .. pluginName)
 	else
 		Utilities.Logging.logError('Failed to download addon update for ' .. pluginName .. ' Error: ' .. json.encode(error))
