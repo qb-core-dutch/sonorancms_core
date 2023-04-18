@@ -105,8 +105,11 @@ CreateThread(function()
 	end
 	if not exists(GetResourcePath('sonorancms') .. '/addonupdates') then
 		errorLog('addonupdates folder was not found! Creating now... Please do not delete!')
-            exports['sonorancms']:makeDir(GetResourcePath('sonorancms') .. '/addonupdates')
+		exports['sonorancms']:makeDir(GetResourcePath('sonorancms') .. '/addonupdates')
 	end
+	RegisterNetEvent('SonoranCMS::Started')
+	Wait(5000)
+	TriggerEvent('SonoranCMS::Started')
 	local versionfile = json.decode(LoadResourceFile(GetCurrentResourceName(), '/version.json'))
 	local fxversion = versionfile.testedFxServerVersion
 	local currentFxVersion = getServerVersion()
