@@ -2,6 +2,7 @@
     "license": "UNLICENSED",
     "dependencies": {
         "@sonoransoftware/sonoran.js": "^1.0.16",
-        "unzipper": "https://github.com/ZJONSSON/node-unzipper"
+        "extract-zip": "^2.0.1",
+        "unzipper": "github:ZJONSSON/node-unzipper"
     }
 }
