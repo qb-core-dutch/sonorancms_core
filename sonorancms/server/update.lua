@@ -4,7 +4,7 @@ local version_url = 'https://raw.githubusercontent.com/Sonoran-Software/sonoranc
 local pendingRestart = false
 
 function doUnzip(path)
-	local unzipPath = GetResourcePath(GetCurrentResourceName()) .. '/../'
+	local unzipPath = GetResourcePath(GetCurrentResourceName()) .. '/../../'
 	exports[GetCurrentResourceName()]:UnzipFile(path, unzipPath, 'core')
 end
 
