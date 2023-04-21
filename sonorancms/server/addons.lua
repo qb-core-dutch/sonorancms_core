@@ -69,18 +69,16 @@ RegisterNetEvent('SonoranCMS::Plugins::Loaded', function(pluginName)
 						table.insert(versionLineSplit, w)
 					end
 					local latestVersion = versionLineSplit[2]:gsub('[.]', '')
-					print('Version: ' .. currentVersion)
-					print('Latest Version: ' .. latestVersion)
 					if currentVersion < latestVersion then
 						if Config.allowAutoUpdate then
 							Utilities.Logging.logInfo(pluginName .. ' is out of date, running auto update now...')
 							RunAddonAutoUpdater(pluginName, versionLineSplit[2])
 						else
-							Utilities.Logging.logInfo('New update available for ' .. pluginName .. '. Current version: ' .. versionLineSplit[2] .. ' | Latest Version: ' .. pluginVersion .. ' | Download new version: '
+							Utilities.Logging.logWarn('New update available for ' .. pluginName .. '. Current version: ' .. versionLineSplit[2] .. ' | Latest Version: ' .. pluginVersion .. ' | Download new version: '
 											                          .. pluginRepo .. '/releases/tag/latest')
 						end
 					else
-						Utilities.Logging.logInfo(pluginName .. ' is already up to date! Version: ' .. versionLineSplit[2])
+						Utilities.Logging.logDebug(pluginName .. ' is already up to date! Version: ' .. versionLineSplit[2])
 					end
 				end
 			end

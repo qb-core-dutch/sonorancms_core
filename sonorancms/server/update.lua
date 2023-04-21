@@ -112,19 +112,31 @@ local function RunAutoUpdater()
 				assert(latestVersion ~= nil, 'Failed to parse remote version. ' .. tostring(latestVersion))
 
 				if latestVersion > localVersion then
-					if not Config['allowAutoUpdate'] then
-						print('^3|===========================================================================|')
-						print('^3|                        ^5SonoranCMS Update Available                        ^3|')
-						print('^3|                             ^8Current : ' .. localVersion .. '                               ^3|')
-						print('^3|                             ^2Latest  : ' .. latestVersion .. '                               ^3|')
-						print('^3| Download at: ^4https://github.com/Sonoran-Software/sonorancms_core ^3|')
-						print('^3|===========================================================================|^7')
-						if Config['allowAutoUpdate'] == nil then
-							Utilities.Logging.logWarn('You have not configured the automatic updater. Please set allowAutoUpdate' .. ' in config.lua to allow updates.')
+					if os.getenv("OS") == "Windows_NT" then
+						-- Running on Windows
+						if not Config['allowAutoUpdate'] then
+							print('^3|===========================================================================|')
+							print('^3|                        ^5SonoranCMS Update Available                        ^3|')
+							print('^3|                             ^8Current : ' .. myVersion .. '                               ^3|')
+							print('^3|                             ^2Latest  : ' .. remote.resource .. '                               ^3|')
+							print('^3| Download at: ^4https://github.com/Sonoran-Software/sonorancms_core          ^3|')
+							print('^3|===========================================================================|^7')
+							if Config['allowAutoUpdate'] == nil then
+								Utilities.Logging.logWarn('You have not configured the automatic updater. Please set allowAutoUpdate' .. ' in config.lua to allow updates.')
+							end
+						else
+							Utilities.Logging.logInfo('Running auto-update now...')
+							doUpdate(remote.resource)
 						end
 					else
-						Utilities.Logging.logInfo('Running auto-update now...')
-						doUpdate(remote.resource)
+						-- Running on Linux
+						print('^3WARNING: Detected Linux Server OS, deferring auto-update until future bugfix update. Server maintainer manual update required...')
+						print('^3|===========================================================================|')
+						print('^3|                        ^5SonoranCMS Update Available                        ^3|')
+						print('^3|                             ^8Current : ' .. myVersion .. '                               ^3|')
+						print('^3|                             ^2Latest  : ' .. remote.resource .. '                               ^3|')
+						print('^3| Download at: ^4https://github.com/Sonoran-Software/sonorancms_core          ^3|')
+						print('^3|===========================================================================|^7')
 					end
 				end
 			end
