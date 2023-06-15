@@ -30,12 +30,20 @@ CreateThread(function()
 			local playerInfo = {name = GetPlayerName(player), ping = GetPlayerPing(player), source = player, identifiers = GetPlayerIdentifiers(player)}
 			table.insert(activePlayers, playerInfo)
 		end
-        if Config.framework == 'qb-core' then
-            QBCore = exports['qb-core']:GetCoreObject()
-            qbCharacters = QBCore.Functions.GetQBPlayers()
-        end
-		local apiResponse = {{uptime = GetGameTimer(), system = {cpu = systemInfo.cpu, memory = systemInfo.memory}, players = activePlayers, characters = qbCharacters }}
-        print(json.encode(apiResponse))
+		if Config.framework == 'qb-core' then
+			QBCore = exports['qb-core']:GetCoreObject()
+			qbRawChars = QBCore.Functions.GetQBPlayers()
+			qbCharacters = {}
+			for _, v in ipairs(qbRawChars) do
+				local charInfo = {offline = v.Offline, name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.charinfo.cid,
+					license = v.PlayerData.license,
+					jobInfo = {name = v.PlayerData.job.name, grade = v.PlayerData.job.grade.name, label = v.PlayerData.job.label, onDuty = v.PlayerData.job.onduty, type = v.PlayerData.job.type},
+					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
+				table.insert(qbCharacters, charInfo)
+			end
+			apiResponse = {{uptime = GetGameTimer(), system = {cpu = systemInfo.cpu, memory = systemInfo.ram}, players = activePlayers, characters = qbCharacters}}
+			print(json.encode(apiResponse))
+		end
 		-- performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 		-- 	if not ok then
 		-- 		logError('API_ERROR')
