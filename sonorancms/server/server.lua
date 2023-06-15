@@ -19,7 +19,7 @@ SetHttpHandler(function(req, res)
 			end
 			if body.key and body.key:upper() == Config.APIKey:upper() then
 				if plugin_handlers[body.type] ~= nil then
-					TriggerEvent(plugin_handlers[body.type], body)
+					plugin_handlers[body.type](body)
 					res.send('ok')
 					return
 				else
@@ -47,6 +47,7 @@ RegisterNetEvent('SonoranCMS::pushevents::UnitLogin', function(accID)
 		end
 	end, 'POST', json.encode(payload), {['Content-Type'] = 'application/json'})
 end)
+
 
 RegisterNetEvent('SonoranCMS::pushevents::UnitLogout', function(accID)
 	local payload = {}
@@ -228,7 +229,7 @@ end)
 
 ApiEndpoints = {['GET_SUB_VERSION'] = 'general', ['CHECK_COM_APIID'] = 'general', ['GET_COM_ACCOUNT'] = 'general', ['GET_DEPARTMENTS'] = 'general', ['GET_PROFILE_FIELDS'] = 'general',
 	['GET_ACCOUNT_RANKS'] = 'general', ['SET_ACCOUNT_RANKS'] = 'general', ['CLOCK_IN_OUT'] = 'general', ['KICK_ACCOUNT'] = 'general', ['BAN_ACCOUNT'] = 'general', ['EDIT_ACC_PROFLIE_FIELDS'] = 'general',
-	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events'}
+	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events', ['GAMESTATE'] = 'events'}
 
 function registerApiType(type, endpoint)
 	ApiEndpoints[type] = endpoint
