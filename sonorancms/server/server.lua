@@ -133,7 +133,7 @@ end)
 local function sendConsole(level, color, message)
 	local debugging = true
 	if Config ~= nil then
-		debugging = (Config.debugMode == true and Config.debugMode ~= 'false')
+		debugging = (Config.debug_mode == true and Config.debug_mode ~= 'false')
 	end
 	local time = os and os.date('%X') or LocalTime()
 	local info = debug.getinfo(3, 'S')
