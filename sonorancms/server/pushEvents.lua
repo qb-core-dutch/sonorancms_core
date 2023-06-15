@@ -1,3 +1,4 @@
+local vehicleGamePool = {}
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -67,17 +68,22 @@ CreateThread(function()
 					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
 				table.insert(qbCharacters, charInfo)
 			end
+			TriggerClientEvent('SonoranCMS::core::RequestGamePool', -1)
 			apiResponse = {{uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters}}
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 		end
-		-- performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
-		-- 	if not ok then
-		-- 		logError('API_ERROR')
-		-- 		Config.critError = true
-		-- 		return
-		-- 	end
-		-- end)
+		performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
+			if not ok then
+				logError('API_ERROR')
+				Config.critError = true
+				return
+			end
+		end)
 		Wait(60000)
 	end
+end)
+
+RegisterNetEvent('SonoranCMS::core::ReturnGamePool', function(gamePool)
+	vehicleGamePool = gamePool
 end)
