@@ -10,14 +10,14 @@ RegisterNetEvent('SonoranCMS::core::RequestGamePool', function()
 			vehicleData.fuel = GetVehicleFuelLevel(v)
 			vehicleData.bodyHealth = GetVehicleBodyHealth(v)
 			vehicleData.displayName = GetDisplayNameFromVehicleModel(GetEntityModel(v))
-			vehicleData.driver = GetPlayerServerId(ped)
+			vehicleData.driver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(ped))
 			vehicleData.passengers = {}
 			for i = -1, GetVehicleMaxNumberOfPassengers(GetVehiclePedIsIn(GetPlayerPed(-1), false)) + 1, 1 do
 				local pedPass = GetPedInVehicleSeat(GetVehiclePedIsIn(GetPlayerPed(-1), false), i)
 				if (DoesEntityExist(pedPass)) then
 					if (IsPedAPlayer(pedPass) and ped ~= pedPass) then
 						local pedServerId = GetPlayerServerId(NetworkGetPlayerIndexFromPed(pedPass))
-						table.insert(vehicleData.passengers, pedServerId)
+						table.insert(vehicleData.passengers, {seat = i, passengerId = pedServerId})
 					end
 				end
 			end

@@ -49,7 +49,12 @@ CreateThread(function()
 end)
 
 CreateThread(function()
+	local first = true
 	while true do
+		while first do
+			Wait(5000)
+			first = false
+		end
 		local systemInfo = exports['sonorancms']:getSystemInfo()
 		local activePlayers = {}
 		for i = 0, GetNumPlayerIndices() - 1 do
@@ -68,7 +73,13 @@ CreateThread(function()
 					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
 				table.insert(qbCharacters, charInfo)
 			end
-			TriggerClientEvent('SonoranCMS::core::RequestGamePool', -1)
+			for i = 0, GetNumPlayerIndices() - 1 do
+				local p = GetPlayerFromIndex(i)
+				if p ~= nil then
+					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
+				end
+			end
+			Wait(5000)
 			apiResponse = {{uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
