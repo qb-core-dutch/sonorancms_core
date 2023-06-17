@@ -48,7 +48,6 @@ RegisterNetEvent('SonoranCMS::pushevents::UnitLogin', function(accID)
 	end, 'POST', json.encode(payload), {['Content-Type'] = 'application/json'})
 end)
 
-
 RegisterNetEvent('SonoranCMS::pushevents::UnitLogout', function(accID)
 	local payload = {}
 	payload['id'] = Config.CommID
@@ -187,6 +186,22 @@ function debugLog(message)
 	sendConsole('DEBUG', '^7', message)
 end
 
+local ErrorCodes =
+				{['STEAM_ERROR'] = 'You have set SonoranCAD to Steam mode, but have not configured a Steam Web API key. Please see FXServer documentation. SonoranCAD will not function in Steam mode without this set.',
+					['PORT_MISSING_ERROR'] = 'Could not find valid server information for server ID %s. Ensure you have configured your server in the CAD before using the map or push events.',
+					['PORT_CONFIG_ERROR'] = 'CONFIGURATION PROBLEM: Your current game server port (%s) does not match your CAD configuration (%s). Please ensure they match.',
+					['MAP_CONFIG_ERROR'] = 'CONFIGURATION PROBLEM: Map port on the server (%s) does not match your CAD configuration (%s) for server ID (%s). Please ensure they match.',
+					['PORT_OUTBOUND_ERROR'] = 'CONFIGURATION PROBLEM: Detected outbound IP (%s), but (%s) is configured in the CAD. They must match!',
+					['PORT_OUTBOUND_MISMATCH'] = 'CONFIGURATION PROBLEM: Detected IP (%s), but (%s) is configured in the CAD. They must match!',
+					['CONFIG_ERROR'] = 'Failed to load core configuration. Ensure config.json is present and is the correct format.',
+					['API_ERROR'] = 'Failed to get version information. Is the API down? Please restart sonorancad.',
+					['API_PAID_ONLY'] = 'ERROR: Your community cannot use any plugins requiring the API. Please purchase a subscription of Standard or higher.',
+					['ERROR_ABORT'] = 'Aborted startup due to critical errors reported. Review logs for troubleshooting.', ['PLUGIN_DEPENDENCY_ERROR'] = 'Plugin %s requires %s, which is not loaded! Skipping.',
+					['PLUGIN_VERSION_MISMATCH'] = 'PLUGIN ERROR: Plugin %s requires %s at version %s or higher, but only %s was found. Use the command "sonoran pluginupdate" to check for updates.',
+					['PLUGIN_CONFIG_OUTDATED'] = 'Plugin Updater: %s has a new configuration version (%s ~= %s). You should look at the template configuration file (CHANGEMEconfig_%s.lua) and update your configuration before using this plugin.',
+					['PLUGIN_CORE_OUTDATED'] = 'PLUGIN ERROR: Plugin %s requires Core Version %s, but you have %s. Please update SonoranCAD to use this plugin. Force disabled.',
+					['INVALID_COMMUNITY_ID'] = 'You have set an invalid community ID, please check your Config and SonoranCMS integration'}
+
 function logError(err, msg)
 	local o = ''
 	if msg == nil then
@@ -229,7 +244,7 @@ end)
 
 ApiEndpoints = {['GET_SUB_VERSION'] = 'general', ['CHECK_COM_APIID'] = 'general', ['GET_COM_ACCOUNT'] = 'general', ['GET_DEPARTMENTS'] = 'general', ['GET_PROFILE_FIELDS'] = 'general',
 	['GET_ACCOUNT_RANKS'] = 'general', ['SET_ACCOUNT_RANKS'] = 'general', ['CLOCK_IN_OUT'] = 'general', ['KICK_ACCOUNT'] = 'general', ['BAN_ACCOUNT'] = 'general', ['EDIT_ACC_PROFLIE_FIELDS'] = 'general',
-	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events', ['GAMESTATE'] = 'events'}
+	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events', ['GAMESTATE'] = 'servers'}
 
 function registerApiType(type, endpoint)
 	ApiEndpoints[type] = endpoint
@@ -239,6 +254,7 @@ exports('registerApiType', registerApiType)
 local rateLimitedEndpoints = {}
 
 function performApiRequest(postData, type, cb)
+	print('postData', postData)
 	-- apply required headers
 	local payload = {}
 	payload['id'] = Config.CommID
@@ -254,8 +270,10 @@ function performApiRequest(postData, type, cb)
 	local url = Config.apiUrl .. tostring(endpoint) .. '/' .. tostring(type:lower())
 	assert(type ~= nil, 'No type specified, invalid request.')
 	if Config.critError then
+		errorLog('API request failed: critical error encountered, API version too low, aborting request.')
 		return
 	end
+	print('url', url)
 	if rateLimitedEndpoints[type] == nil then
 		PerformHttpRequestS(url, function(statusCode, res, headers)
 			if Config.debug_mode then

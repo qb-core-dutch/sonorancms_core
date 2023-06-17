@@ -80,21 +80,26 @@ CreateThread(function()
 				end
 			end
 			Wait(5000)
-			apiResponse = {{uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}}
+			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
+			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
+				print('res', result)
+				if not ok then
+					logError('API_ERROR')
+					Config.critError = true
+					return
+				end
+			end)
 		end
-		performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
-			if not ok then
-				logError('API_ERROR')
-				Config.critError = true
-				return
-			end
-		end)
 		Wait(60000)
 	end
 end)
 
 RegisterNetEvent('SonoranCMS::core::ReturnGamePool', function(gamePool)
 	vehicleGamePool = gamePool
+end)
+
+RegisterNetEvent('SonoranCMS::core::HandleNotifications', function(msg, id)
+	TriggerClientEvent('SonoranCMS::core::ShowAlert', id, msg)
 end)

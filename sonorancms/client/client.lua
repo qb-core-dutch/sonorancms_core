@@ -4,6 +4,7 @@ RegisterNetEvent('SonoranCMS::core::RequestGamePool', function()
 		local ped = GetPedInVehicleSeat(v, -1)
 		if (DoesEntityExist(ped)) and (IsPedAPlayer(ped)) then
 			local vehicleData = {}
+			vehicleData.vehicleHandle = v
 			vehicleData.model = GetEntityModel(v)
 			vehicleData.plate = GetVehicleNumberPlateText(v)
 			vehicleData.health = GetVehicleEngineHealth(v)
@@ -12,8 +13,8 @@ RegisterNetEvent('SonoranCMS::core::RequestGamePool', function()
 			vehicleData.displayName = GetDisplayNameFromVehicleModel(GetEntityModel(v))
 			vehicleData.driver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(ped))
 			vehicleData.passengers = {}
-			for i = -1, GetVehicleMaxNumberOfPassengers(GetVehiclePedIsIn(GetPlayerPed(-1), false)) + 1, 1 do
-				local pedPass = GetPedInVehicleSeat(GetVehiclePedIsIn(GetPlayerPed(-1), false), i)
+			for i = -1, GetVehicleMaxNumberOfPassengers(GetVehiclePedIsIn(ped)) + 1, 1 do
+				local pedPass = GetPedInVehicleSeat(GetVehiclePedIsIn(ped), i)
 				if (DoesEntityExist(pedPass)) then
 					if (IsPedAPlayer(pedPass) and ped ~= pedPass) then
 						local pedServerId = GetPlayerServerId(NetworkGetPlayerIndexFromPed(pedPass))
@@ -25,4 +26,10 @@ RegisterNetEvent('SonoranCMS::core::RequestGamePool', function()
 		end
 	end
 	TriggerServerEvent('SonoranCMS::core::ReturnGamePool', returnVehicleData)
+end)
+
+RegisterNetEvent('SonoranCMS::core::ShowAlert', function(message)
+	SetNotificationTextEntry('STRING')
+	AddTextComponentString(message)
+	DrawNotification(urgent, true)
 end)
