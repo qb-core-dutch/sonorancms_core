@@ -19,7 +19,7 @@ SetHttpHandler(function(req, res)
 			end
 			if body.key and body.key:upper() == Config.APIKey:upper() then
 				if plugin_handlers[body.type] ~= nil then
-					TriggerEvent(plugin_handlers[body.type], body)
+					plugin_handlers[body.type](body)
 					res.send('ok')
 					return
 				else
@@ -132,7 +132,7 @@ end)
 local function sendConsole(level, color, message)
 	local debugging = true
 	if Config ~= nil then
-		debugging = (Config.debugMode == true and Config.debugMode ~= 'false')
+		debugging = (Config.debug_mode == true and Config.debug_mode ~= 'false')
 	end
 	local time = os and os.date('%X') or LocalTime()
 	local info = debug.getinfo(3, 'S')
@@ -186,6 +186,8 @@ function debugLog(message)
 	sendConsole('DEBUG', '^7', message)
 end
 
+local ErrorCodes = {['INVALID_COMMUNITY_ID'] = 'You have set an invalid community ID, please check your Config and SonoranCMS integration'}
+
 function logError(err, msg)
 	local o = ''
 	if msg == nil then
@@ -228,7 +230,7 @@ end)
 
 ApiEndpoints = {['GET_SUB_VERSION'] = 'general', ['CHECK_COM_APIID'] = 'general', ['GET_COM_ACCOUNT'] = 'general', ['GET_DEPARTMENTS'] = 'general', ['GET_PROFILE_FIELDS'] = 'general',
 	['GET_ACCOUNT_RANKS'] = 'general', ['SET_ACCOUNT_RANKS'] = 'general', ['CLOCK_IN_OUT'] = 'general', ['KICK_ACCOUNT'] = 'general', ['BAN_ACCOUNT'] = 'general', ['EDIT_ACC_PROFLIE_FIELDS'] = 'general',
-	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events'}
+	['GET_GAME_SERVERS'] = 'servers', ['SET_GAME_SERVERS'] = 'servers', ['VERIFY_WHITELIST'] = 'servers', ['FULL_WHITELIST'] = 'servers', ['RSVP'] = 'events', ['GAMESTATE'] = 'servers'}
 
 function registerApiType(type, endpoint)
 	ApiEndpoints[type] = endpoint
@@ -238,6 +240,7 @@ exports('registerApiType', registerApiType)
 local rateLimitedEndpoints = {}
 
 function performApiRequest(postData, type, cb)
+	print('postData', postData)
 	-- apply required headers
 	local payload = {}
 	payload['id'] = Config.CommID
@@ -253,8 +256,10 @@ function performApiRequest(postData, type, cb)
 	local url = Config.apiUrl .. tostring(endpoint) .. '/' .. tostring(type:lower())
 	assert(type ~= nil, 'No type specified, invalid request.')
 	if Config.critError then
+		errorLog('API request failed: critical error encountered, API version too low, aborting request.')
 		return
 	end
+	print('url', url)
 	if rateLimitedEndpoints[type] == nil then
 		PerformHttpRequestS(url, function(statusCode, res, headers)
 			if Config.debug_mode then
