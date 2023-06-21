@@ -58,6 +58,19 @@ CreateThread(function()
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
 		end
 	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_REPAIR_VEHICLE', function(data)
+		if data ~= nil then
+			for i = 0, GetNumPlayerIndices() - 1 do
+				local p = GetPlayerFromIndex(i)
+				if p ~= nil then
+					TriggerClientEvent('SonoranCMS::core::RepairVehicle', p, data.data.vehicleHandle)
+				end
+			end
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' repairing vehicle with handle ' .. data.data.vehicleHandle)
+		else
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
+		end
+	end)
 end)
 
 CreateThread(function()
@@ -118,5 +131,12 @@ RegisterNetEvent('SonoranCMS::core::DeleteVehicleCB', function(vehDriver, passen
 	for _, v in ipairs(passengers) do
 		TriggerClientEvent('chat:addMessage', v, {color = {255, 0, 0}, multiline = true,
 			args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been despawned! Please contact a staff member if you believe this is an error.'}})
+	end
+end)
+
+RegisterNetEvent('SonoranCMS::core::RepairVehicleCB', function(vehDriver, passengers)
+	TriggerClientEvent('chat:addMessage', vehDriver, {color = {255, 0, 0}, multiline = true, args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been repaired!'}})
+	for _, v in ipairs(passengers) do
+		TriggerClientEvent('chat:addMessage', v, {color = {255, 0, 0}, multiline = true, args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been repaired!'}})
 	end
 end)
