@@ -12,7 +12,6 @@ CreateThread(function()
 			if targetPlayer ~= nil then
 				local reason = 'Kicked By SonoranCMS Management Panel: ' .. data.data.reason
 				local targetPlayerName = GetPlayerName(targetPlayer)
-				print(targetPlayerName)
 				DropPlayer(targetPlayer, reason)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' dropping player ' .. targetPlayerName .. ' for reason: ' .. reason)
 			else
@@ -44,6 +43,19 @@ CreateThread(function()
 			else
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
 			end
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_DESPAWN_VEHICLE', function(data)
+		if data ~= nil then
+			for i = 0, GetNumPlayerIndices() - 1 do
+				local p = GetPlayerFromIndex(i)
+				if p ~= nil then
+					TriggerClientEvent('SonoranCMS::core::DeleteVehicle', p, data.data.vehicleHandle)
+				end
+			end
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' despawning vehicle with handle ' .. data.data.vehicleHandle)
+		else
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
 		end
 	end)
 end)
@@ -84,7 +96,7 @@ CreateThread(function()
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
-				print('res', result)
+				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
 					logError('API_ERROR')
 					Config.critError = true
@@ -100,6 +112,11 @@ RegisterNetEvent('SonoranCMS::core::ReturnGamePool', function(gamePool)
 	vehicleGamePool = gamePool
 end)
 
-RegisterNetEvent('SonoranCMS::core::HandleNotifications', function(msg, id)
-	TriggerClientEvent('SonoranCMS::core::ShowAlert', id, msg)
+RegisterNetEvent('SonoranCMS::core::DeleteVehicleCB', function(vehDriver, passengers)
+	TriggerClientEvent('chat:addMessage', vehDriver, {color = {255, 0, 0}, multiline = true,
+		args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been despawned! Please contact a staff member if you believe this is an error.'}})
+	for _, v in ipairs(passengers) do
+		TriggerClientEvent('chat:addMessage', v, {color = {255, 0, 0}, multiline = true,
+			args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been despawned! Please contact a staff member if you believe this is an error.'}})
+	end
 end)

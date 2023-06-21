@@ -28,8 +28,24 @@ RegisterNetEvent('SonoranCMS::core::RequestGamePool', function()
 	TriggerServerEvent('SonoranCMS::core::ReturnGamePool', returnVehicleData)
 end)
 
-RegisterNetEvent('SonoranCMS::core::ShowAlert', function(message)
-	SetNotificationTextEntry('STRING')
-	AddTextComponentString(message)
-	DrawNotification(urgent, true)
+RegisterNetEvent('SonoranCMS::core::DeleteVehicle', function(vehHandle)
+	if DoesEntityExist(vehHandle) then
+		local vehDriver = GetPedInVehicleSeat(vehHandle, -1)
+		if (DoesEntityExist(vehDriver)) and (IsPedAPlayer(vehDriver)) then
+			local passengers = {}
+			for i = -1, GetVehicleMaxNumberOfPassengers(GetVehiclePedIsIn(ped)) + 1, 1 do
+				local pedPass = GetPedInVehicleSeat(GetVehiclePedIsIn(ped), i)
+				if (DoesEntityExist(pedPass)) then
+					if (IsPedAPlayer(pedPass) and ped ~= pedPass) then
+						local pedServerId = GetPlayerServerId(NetworkGetPlayerIndexFromPed(pedPass))
+						table.insert(passengers, pedServerId)
+					end
+				end
+			end
+			vehDriver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(vehDriver))
+			TriggerServerEvent('SonoranCMS::core::DeleteVehicleCB', vehDriver, passengers)
+			SetEntityAsMissionEntity(vehHandle, true, true)
+			DeleteEntity(vehHandle)
+		end
+	end
 end)
