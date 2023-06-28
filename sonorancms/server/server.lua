@@ -240,7 +240,6 @@ exports('registerApiType', registerApiType)
 local rateLimitedEndpoints = {}
 
 function performApiRequest(postData, type, cb)
-	print('postData', postData)
 	-- apply required headers
 	local payload = {}
 	payload['id'] = Config.CommID
@@ -259,7 +258,6 @@ function performApiRequest(postData, type, cb)
 		errorLog('API request failed: critical error encountered, API version too low, aborting request.')
 		return
 	end
-	print('url', url)
 	if rateLimitedEndpoints[type] == nil then
 		PerformHttpRequestS(url, function(statusCode, res, headers)
 			if Config.debug_mode then

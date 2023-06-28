@@ -1,4 +1,15 @@
 local vehicleGamePool = {}
+
+local function removeNullElements(arr)
+	local result = {}
+	for _, value in ipairs(arr) do
+		if value ~= nil then
+			table.insert(result, value)
+		end
+	end
+	return result
+end
+
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -71,6 +82,24 @@ CreateThread(function()
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
 		end
 	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_WARN_PLAYER', function(data)
+		if data ~= nil then
+			local targetPlayer = nil
+			for i = 0, GetNumPlayerIndices() - 1 do
+				local p = GetPlayerFromIndex(i)
+				if p == data.data.playerSource then
+					targetPlayer = p
+				end
+			end
+			if targetPlayer ~= nil then
+				local targetPlayerName = GetPlayerName(targetPlayer)
+				TriggerClientEvent('SonoranCMS::core::HandleWarnedPlayer', targetPlayer, data.data.message)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' warning player ' .. targetPlayerName .. ' for reason: ' .. data.data.message)
+			else
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
+			end
+		end
+	end)
 end)
 
 CreateThread(function()
@@ -90,9 +119,10 @@ CreateThread(function()
 		if Config.framework == 'qb-core' then
 			QBCore = exports['qb-core']:GetCoreObject()
 			qbRawChars = QBCore.Functions.GetQBPlayers()
+			local cleanedArray = removeNullElements(qbRawChars)
 			qbCharacters = {}
-			for _, v in ipairs(qbRawChars) do
-				local charInfo = {offline = v.Offline, name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.charinfo.cid,
+			for _, v in ipairs(cleanedArray) do
+				local charInfo = {offline = v.Offline, name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.citizenid,
 					license = v.PlayerData.license,
 					jobInfo = {name = v.PlayerData.job.name, grade = v.PlayerData.job.grade.name, label = v.PlayerData.job.label, onDuty = v.PlayerData.job.onduty, type = v.PlayerData.job.type},
 					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
