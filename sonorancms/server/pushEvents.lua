@@ -287,8 +287,8 @@ AddEventHandler('QBCore:ToggleDuty', function()
 	end
 end)
 
-AddEventHandler('QBCore:Server:SetMetaData', function(meta, deta)
-	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, deta = deta})
+AddEventHandler('QBCore:Server:SetMetaData', function(meta, data)
+	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, data = data})
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::QBSpawnVehicle', function(veh)
