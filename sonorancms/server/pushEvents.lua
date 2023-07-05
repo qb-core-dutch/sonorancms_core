@@ -1,5 +1,17 @@
 local vehicleGamePool = {}
+local sub = string.sub
+local ostime = os.time
+local tonumber = tonumber
+local loggerBuffer = {}
+local explosionTypes = {'GRENADE', 'GRENADELAUNCHER', 'STICKYBOMB', 'MOLOTOV', 'ROCKET', 'TANKSHELL', 'HI_OCTANE', 'CAR', 'PLANE', 'PETROL_PUMP', 'BIKE', 'DIR_STEAM', 'DIR_FLAME', 'DIR_WATER_HYDRANT',
+	'DIR_GAS_CANISTER', 'BOAT', 'SHIP_DESTROY', 'TRUCK', 'BULLET', 'SMOKEGRENADELAUNCHER', 'SMOKEGRENADE', 'BZGAS', 'FLARE', 'GAS_CANISTER', 'EXTINGUISHER', 'PROGRAMMABLEAR', 'TRAIN', 'BARREL',
+	'PROPANE', 'BLIMP', 'DIR_FLAME_EXPLODE', 'TANKER', 'PLANE_ROCKET', 'VEHICLE_BULLET', 'GAS_TANK', 'BIRD_CRAP', 'RAILGUN', 'BLIMP2', 'FIREWORK', 'SNOWBALL', 'PROXMINE', 'VALKYRIE_CANNON',
+	'AIR_DEFENCE', 'PIPEBOMB', 'VEHICLEMINE', 'EXPLOSIVEAMMO', 'APCSHELL', 'BOMB_CLUSTER', 'BOMB_GAS', 'BOMB_INCENDIARY', 'BOMB_STANDARD', 'TORPEDO', 'TORPEDO_UNDERWATER', 'BOMBUSHKA_CANNON',
+	'BOMB_CLUSTER_SECONDARY', 'HUNTER_BARRAGE', 'HUNTER_CANNON', 'ROGUE_CANNON', 'MINE_UNDERWATER', 'ORBITAL_CANNON', 'BOMB_STANDARD_WIDE', 'EXPLOSIVEAMMO_SHOTGUN', 'OPPRESSOR2_CANNON', 'MORTAR_KINETIC',
+	'VEHICLEMINE_KINETIC', 'VEHICLEMINE_EMP', 'VEHICLEMINE_SPIKE', 'VEHICLEMINE_SLICK', 'VEHICLEMINE_TAR', 'SCRIPT_DRONE', 'RAYGUN', 'BURIEDMINE', 'SCRIPT_MISSIL'}
 
+--- Removes all nil elements from an array
+--- @param arr any
 local function removeNullElements(arr)
 	local result = {}
 	for _, value in ipairs(arr) do
@@ -8,6 +20,25 @@ local function removeNullElements(arr)
 		end
 	end
 	return result
+end
+
+--- logger
+--- Sends logs to the logging buffer, then to the SonoranCMS game panel
+---@param src number the source of the player who did the action
+---@param type string the action type
+---@param data table|nil the event data
+local function serverLogger(src, type, data)
+	loggerBuffer[#loggerBuffer + 1] = {src = src, type = type, data = data or false}
+	while #loggerBuffer > 1000 do
+		table.remove(loggerBuffer, 1)
+	end
+end
+
+--- Checks is a property is invalid
+---@param property any
+---@param invalidType any
+local function isInvalid(property, invalidType)
+	return (property == nil or property == invalidType)
 end
 
 CreateThread(function()
@@ -134,9 +165,21 @@ CreateThread(function()
 					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 				end
 			end
+			local logPayload = {}
+			if #loggerBuffer > 0 then
+				local ts = ostime() * 1000
+				for i = 1, #loggerBuffer do
+					if i <= 999 then
+						loggerBuffer[i].ts = ts + i - 1
+					else
+						loggerBuffer[i].ts = ts + 999
+					end
+				end
+				logPayload = json.encode({logs = loggerBuffer})
+			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool}
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
@@ -149,6 +192,10 @@ CreateThread(function()
 		end
 		Wait(60000)
 	end
+end)
+
+RegisterConsoleListener(function(channel, message)
+	serverLogger(0, 'CONSOLE_LOG', {channel = channel, message = message})
 end)
 
 RegisterNetEvent('SonoranCMS::core::ReturnGamePool', function(gamePool)
@@ -169,4 +216,89 @@ RegisterNetEvent('SonoranCMS::core::RepairVehicleCB', function(vehDriver, passen
 	for _, v in ipairs(passengers) do
 		TriggerClientEvent('chat:addMessage', v, {color = {255, 0, 0}, multiline = true, args = {'[SonoranCMS Management Panel] ', 'Your vehicle has been repaired!'}})
 	end
+end)
+
+RegisterNetEvent('SonoranCMS::ServerLogger::DeathEvent', function(killer, cause)
+	serverLogger(source, 'deathEvent', {killer = killer, cause = cause})
+end)
+
+RegisterNetEvent('SonoranCMS::ServerLogger::PlayerShot', function(weapon)
+	serverLogger(source, 'playerShot', {weapon = weapon})
+end)
+
+AddEventHandler('explosionEvent', function(source, ev)
+	if (isInvalid(ev.damageScale, 0) or isInvalid(ev.cameraShake, 0) or isInvalid(ev.isInvisible, true) or isInvalid(ev.isAudible, false)) then
+		return
+	end
+	if ev.explosionType < -1 or ev.explosionType > 77 then
+		ev.explosionType = 'UNKNOWN'
+	else
+		ev.explosionType = explosionTypes[ev.explosionType + 1]
+	end
+	serverLogger(tonumber(source), 'explosionEvent', ev)
+end)
+
+RegisterNetEvent('chatMessage', function(src, author, text)
+	serverLogger(src, 'ChatMessage', {author = author, text = text})
+end)
+
+AddEventHandler('onResourceStarting', function(resource)
+	serverLogger('onResourceStarting', resource)
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+	serverLogger('onResourceStart', resource)
+end)
+
+AddEventHandler('onServerResourceStart', function(resource)
+	serverLogger('onServerResourceStart', resource)
+end)
+
+AddEventHandler('onResourceListRefresh', function(resource)
+	serverLogger('onResourceListRefresh', resource)
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+	serverLogger('onResourceStop', resource)
+end)
+
+AddEventHandler('onServerResourceStop', function(resource)
+	serverLogger('onServerResourceStop', resource)
+end)
+
+AddEventHandler('playerConnecting', function(name, _, _)
+	serverLogger('playerConnecting', name)
+end)
+
+AddEventHandler('playerDropped', function(name, _, _)
+	serverLogger('playerDropped', name)
+end)
+
+AddEventHandler('QBCore:CallCommand', function(command, args)
+	serverLogger(source, 'QBCore::CallCommand', {command = command, args = args})
+end)
+
+AddEventHandler('QBCore:ToggleDuty', function()
+	local Player = QBCore.Functions.GetPlayer(source)
+	if Player.PlayerData.job.onduty then
+		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = false})
+	else
+		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = true})
+	end
+end)
+
+AddEventHandler('QBCore:Server:SetMetaData', function(meta, deta)
+	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, deta = deta})
+end)
+
+RegisterNetEvent('SonoranCMS::ServerLogger::QBSpawnVehicle', function(veh)
+	serverLogger(source, 'QBCore:Command:SpawnVehicle', veh)
+end)
+
+RegisterNetEvent('SonoranCMS::ServerLogger::QBDeleteVehicle', function()
+	serverLogger(source, 'QBCore:Command:DeleteVehicle')
+end)
+
+RegisterNetEvent('SonoranCMS::ServerLogger::QBClientUsedItem', function(item)
+	serverLogger(source, 'QBCore:Command:ClientUsedItem', item)
 end)
