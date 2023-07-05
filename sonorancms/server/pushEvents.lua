@@ -175,7 +175,7 @@ CreateThread(function()
 						loggerBuffer[i].ts = ts + 999
 					end
 				end
-				logPayload = json.encode({logs = loggerBuffer})
+				logPayload = json.encode(loggerBuffer)
 			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
