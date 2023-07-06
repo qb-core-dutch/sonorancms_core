@@ -27,8 +27,8 @@ end
 ---@param src number the source of the player who did the action
 ---@param type string the action type
 ---@param data table|nil the event data
-local function serverLogger(src, type, data, ts)
-	loggerBuffer[#loggerBuffer + 1] = {src = src, type = type, data = data or false, ts = ts or nil}
+local function serverLogger(src, type, data)
+	loggerBuffer[#loggerBuffer + 1] = {src = src, type = type, data = data or false, ts = os.time()}
 	while #loggerBuffer > 1000 do
 		table.remove(loggerBuffer, 1)
 	end
@@ -187,7 +187,7 @@ CreateThread(function()
 end)
 
 RegisterConsoleListener(function(channel, message)
-	serverLogger(0, 'CONSOLE_LOG', {channel = channel, message = message}, os.time)
+	serverLogger(0, 'CONSOLE_LOG', {channel = channel, message = message})
 end)
 
 RegisterNetEvent('SonoranCMS::core::ReturnGamePool', function(gamePool)
@@ -211,11 +211,11 @@ RegisterNetEvent('SonoranCMS::core::RepairVehicleCB', function(vehDriver, passen
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::DeathEvent', function(killer, cause)
-	serverLogger(source, 'deathEvent', {killer = killer, cause = cause}, os.time)
+	serverLogger(source, 'deathEvent', {killer = killer, cause = cause})
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::PlayerShot', function(weapon)
-	serverLogger(source, 'playerShot', {weapon = weapon}, os.time)
+	serverLogger(source, 'playerShot', {weapon = weapon})
 end)
 
 AddEventHandler('explosionEvent', function(source, ev)
@@ -227,39 +227,39 @@ AddEventHandler('explosionEvent', function(source, ev)
 	else
 		ev.explosionType = explosionTypes[ev.explosionType + 1]
 	end
-	serverLogger(tonumber(source), 'explosionEvent', ev, os.time)
+	serverLogger(tonumber(source), 'explosionEvent', ev)
 end)
 
 RegisterNetEvent('chatMessage', function(src, author, text)
-	serverLogger(src, 'ChatMessage', {author = author, text = text}, os.time)
+	serverLogger(src, 'ChatMessage', {author = author, text = text})
 end)
 
 AddEventHandler('onResourceStarting', function(resource)
-	serverLogger(0, 'onResourceStarting', resource, os.time)
+	serverLogger(0, 'onResourceStarting', resource)
 end)
 
 AddEventHandler('onResourceStart', function(resource)
-	serverLogger(0, 'onResourceStart', resource, os.time)
+	serverLogger(0, 'onResourceStart', resource)
 end)
 
 AddEventHandler('onServerResourceStart', function(resource)
-	serverLogger(0, 'onServerResourceStart', resource, os.time)
+	serverLogger(0, 'onServerResourceStart', resource)
 end)
 
 AddEventHandler('onResourceListRefresh', function(resource)
-	serverLogger(0, 'onResourceListRefresh', resource, os.time)
+	serverLogger(0, 'onResourceListRefresh', resource)
 end)
 
 AddEventHandler('onResourceStop', function(resource)
-	serverLogger(0, 'onResourceStop', resource, os.time)
+	serverLogger(0, 'onResourceStop', resource)
 end)
 
 AddEventHandler('onServerResourceStop', function(resource)
-	serverLogger(0, 'onServerResourceStop', resource, os.time)
+	serverLogger(0, 'onServerResourceStop', resource)
 end)
 
 AddEventHandler('playerConnecting', function(name, _, _)
-	serverLogger(0, 'playerConnecting', name, os.time)
+	serverLogger(0, 'playerConnecting', name)
 end)
 
 AddEventHandler('playerDropped', function(name, _, _)
@@ -267,30 +267,30 @@ AddEventHandler('playerDropped', function(name, _, _)
 end)
 
 AddEventHandler('QBCore:CallCommand', function(command, args)
-	serverLogger(source, 'QBCore::CallCommand', {command = command, args = args}, os.time)
+	serverLogger(source, 'QBCore::CallCommand', {command = command, args = args})
 end)
 
 AddEventHandler('QBCore:ToggleDuty', function()
 	local Player = QBCore.Functions.GetPlayer(source)
 	if Player.PlayerData.job.onduty then
-		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = false}, os.time)
+		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = false})
 	else
-		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = true}, os.time)
+		serverLogger(source, 'QBCore::ToggleDuty', {job = Player.PlayerData.job.name, duty = true})
 	end
 end)
 
 AddEventHandler('QBCore:Server:SetMetaData', function(meta, data)
-	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, data = data}, os.time)
+	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, data = data})
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::QBSpawnVehicle', function(veh)
-	serverLogger(source, 'QBCore:Command:SpawnVehicle', veh, os.time)
+	serverLogger(source, 'QBCore:Command:SpawnVehicle', veh)
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::QBDeleteVehicle', function()
-	serverLogger(source, 'QBCore:Command:DeleteVehicle', nil, os.time)
+	serverLogger(source, 'QBCore:Command:DeleteVehicle', nil)
 end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::QBClientUsedItem', function(item)
-	serverLogger(source, 'QBCore:Command:ClientUsedItem', item, os.time)
+	serverLogger(source, 'QBCore:Command:ClientUsedItem', item)
 end)
