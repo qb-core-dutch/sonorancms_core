@@ -184,12 +184,12 @@ CreateThread(function()
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
 				if resource_name then
-					table.insert(resourceList, {name= resource_name, state = GetResourceState(resource_name)})
+					table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name)})
 				end
 			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = json.encode(resourceList)}
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList}
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
