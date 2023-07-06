@@ -131,6 +131,17 @@ CreateThread(function()
 			end
 		end
 	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'EXECUTE_RESOURCE_COMMAND', function(data)
+		if data ~= nil then
+			if data.data.resourceName then
+				ExecuteCommand(data.data.command .. ' ' .. data.data.resourceName)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command .. ' ' .. data.data.resourceName)
+			else
+				ExecuteCommand(data.data.command)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command)
+			end
+		end
+	end)
 end)
 
 CreateThread(function()
