@@ -239,7 +239,7 @@ CreateThread(function()
 				end
 				local PlayerData = row
 				PlayerData.charinfo = json.decode(PlayerData.charinfo)
-				MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, model, plate, state) VALUES (?, ?, ?, ?, ?)',
+				MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, vehicle, plate, state) VALUES (?, ?, ?, ?, ?)',
 				             {PlayerData.citizenid, data.data.garage, data.data.model, data.data.plate, data.data.state}, function(affectedRows)
 					debugLog('Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
 				end)
@@ -333,9 +333,32 @@ CreateThread(function()
 					table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name)})
 				end
 			end
+			local characterVehicles = {}
+			MySQL.query('SELECT * FROM player_vehicles', function(row)
+				for _, v in ipairs(row) do
+					vehicle = {}
+					vehicle.id = v.id
+					vehicle.citizenid = v.citizenid
+					vehicle.garage = v.garage
+					vehicle.model = v.vehicle
+					vehicle.plate = v.plate
+					vehicle.state = v.state
+					vehicle.fuel = v.fuel
+					vehicle.engine = v.engine
+					vehicle.body = v.body
+					vehicle.mileage = v.mileage
+					vehicle.balance = v.balance
+					vehicle.paymentAmount = v.paymentamount
+					vehicle.paymentsLeft = v.paymentsleft
+					vehicle.financeTime = v.financetime
+					vehicle.depotPrice = v.depotprice
+					vehicle.displayName = v.vehicle
+					table.insert(characterVehicles, vehicle)
+				end
+			end)
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList}
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
