@@ -144,56 +144,148 @@ CreateThread(function()
 	end)
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_INFO', function(data)
 		if data ~= nil then
-			QBCore = exports['qb-core']:GetCoreObject()
-			local Player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
-			if Player ~= nil then
-				local PlayerData = Player.PlayerData
-				if PlayerData then
-					local ped = GetPlayerPed(PlayerData.source)
-					local pcoords = GetEntityCoords(ped)
-					if data.data.firstName and data.data.firstName ~= '' then
-						PlayerData.charinfo.firstname = data.data.firstName
-					end
-					if data.data.lastName and data.data.lastName ~= '' then
-						PlayerData.charinfo.lastname = data.data.lastName
-					end
-					if data.data.birthDate and data.data.birthDate ~= '' then
-						PlayerData.charinfo.birthdate = data.data.birthDate
-					end
-					if data.data.gender and data.data.gender ~= '' then
-						PlayerData.charinfo.gender = data.data.gender
-					end
-					if data.data.nationality and data.data.nationality ~= '' then
-						PlayerData.charinfo.nationality = data.data.nationality
-					end
-					if data.data.phoneNumber and data.data.phoneNumber ~= '' then
-						PlayerData.charinfo.phone = data.data.phoneNumber
-					end
-					local NewCharInfo = json.encode(PlayerData.charinfo)
-					MySQL.update('UPDATE players SET charinfo = ? WHERE citizenid = ?', {NewCharInfo, PlayerData.citizenid}, function(affectedRows)
-						debugLog('Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
-					end)
-					QBCore.Player.SaveInventory(PlayerData.source)
-					QBCore.ShowSuccess(GetCurrentResourceName(), PlayerData.name .. ' PLAYER SAVED!')
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
-				else
-					QBCore.ShowError(GetCurrentResourceName(), 'ERROR QBCORE.PLAYER.SAVE - PLAYERDATA IS EMPTY!')
+			MySQL.single('SELECT * FROM `players` WHERE `citizenid` = ? LIMIT 1', {data.data.citizenId}, function(row)
+				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
+					return
 				end
-			else
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
-			end
+				local PlayerData = row
+				PlayerData.charinfo = json.decode(PlayerData.charinfo)
+				if data.data.firstName and data.data.firstName ~= '' then
+					PlayerData.charinfo.firstname = data.data.firstName
+				end
+				if data.data.lastName and data.data.lastName ~= '' then
+					PlayerData.charinfo.lastname = data.data.lastName
+				end
+				if data.data.birthDate and data.data.birthDate ~= '' then
+					PlayerData.charinfo.birthdate = data.data.birthDate
+				end
+				if data.data.gender and data.data.gender ~= '' then
+					PlayerData.charinfo.gender = data.data.gender
+				end
+				if data.data.nationality and data.data.nationality ~= '' then
+					PlayerData.charinfo.nationality = data.data.nationality
+				end
+				if data.data.phoneNumber and data.data.phoneNumber ~= '' then
+					PlayerData.charinfo.phone = data.data.phoneNumber
+				end
+				local NewCharInfo = json.encode(PlayerData.charinfo)
+				MySQL.update('UPDATE players SET charinfo = ? WHERE citizenid = ?', {NewCharInfo, PlayerData.citizenid}, function(affectedRows)
+					debugLog('Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
+				end)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+			end)
+		else
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
 		end
 	end)
-	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_META', function(data)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_VEHICLE', function(data)
 		if data ~= nil then
-			if data.data.resourceName then
-				ExecuteCommand(data.data.command .. ' ' .. data.data.resourceName)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command .. ' ' .. data.data.resourceName)
-			else
-				ExecuteCommand(data.data.command)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command)
-			end
+			MySQL.single('SELECT * FROM `player_vehicles` WHERE `id` = ? LIMIT 1', {data.data.vehicleId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
+					return
+				end
+				local vehData = row
+				if data.data.plate and data.data.plate ~= '' then
+					vehData.plate = data.data.plate
+				end
+				if data.data.garage and data.data.garage ~= '' then
+					vehData.garage = data.data.garage
+				end
+				if data.data.fuel and data.data.fuel ~= '' then
+					vehData.fuel = data.data.fuel
+				end
+				if data.data.engine and data.data.engine ~= '' then
+					vehData.engine = data.data.engine
+				end
+				if data.data.body and data.data.body ~= '' then
+					vehData.body = data.data.body
+				end
+				if data.data.state and data.data.state ~= '' then
+					vehData.state = data.data.state
+				end
+				if data.data.mileage and data.data.mileage ~= '' then
+					vehData.mileage = data.data.mileage
+				end
+				if data.data.balance and data.data.balance ~= '' then
+					vehData.balance = data.data.balance
+				end
+				if data.data.paymentAmount and data.data.paymentAmount ~= '' then
+					vehData.paymentamount = data.data.paymentAmount
+				end
+				if data.data.paymentsLeft and data.data.paymentsLeft ~= '' then
+					vehData.paymentsleft = data.data.paymentsLeft
+				end
+				if data.data.financeTime and data.data.financeTime ~= '' then
+					vehData.financetime = data.data.financeTime
+				end
+				vehData = json.encode(vehData)
+				MySQL.update(
+								'UPDATE player_vehicles SET plate = ?, garage = ?, fuel = ?, engine = ?, body = ?, state = ?, mileage = ?, balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE id = ?',
+								{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.mileage, vehData.balance, vehData.paymentamount, vehData.financetime, data.data.vehicleId},
+								function(affectedRows)
+									debugLog('Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
+								end)
+			end)
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_ADD_CHAR_VEHICLE', function(data)
+		if data ~= nil then
+			MySQL.single('SELECT * FROM `players` WHERE `citizenid` = ? LIMIT 1', {data.data.citizenId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
+					return
+				end
+				local PlayerData = row
+				PlayerData.charinfo = json.decode(PlayerData.charinfo)
+				MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, model, plate, state) VALUES (?, ?, ?, ?, ?)',
+				             {PlayerData.citizenid, data.data.garage, data.data.model, data.data.plate, data.data.state}, function(affectedRows)
+					debugLog('Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
+				end)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+			end)
+		else
+			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_TRANSFER_CHAR_VEHICLE', function(data)
+		if data ~= nil then
+			MySQL.single('SELECT * FROM `player_vehicles` WHERE `id` = ? LIMIT 1', {data.data.vehicleId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
+					return
+				end
+				MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.citizenId, data.data.vehicleId}, function(affectedRows)
+					debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.citizenId .. ' with ' .. affectedRows .. ' rows affected')
+				end)
+			end)
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_REPAIR_CHAR_VEHICLE', function(data)
+		if data ~= nil then
+			MySQL.single('SELECT * FROM `player_vehicles` WHERE `id` = ? LIMIT 1', {data.data.vehicleId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
+					return
+				end
+				MySQL.update('UPDATE player_vehicles SET engine = ?, body = ? WHERE id = ?', {1000, 1000, data.data.vehicleId}, function(affectedRows)
+					debugLog('Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
+				end)
+			end)
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_DELETE_CHAR_VEHICLE', function(data)
+		if data ~= nil then
+			MySQL.single('SELECT * FROM `player_vehicles` WHERE `id` = ? LIMIT 1', {data.data.vehicleId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
+					return
+				end
+				MySQL.query('DELETE FROM player_vehicles WHERE id = ?', {data.data.vehicleId}, function(affectedRows)
+					debugLog('Deleted vehicle with ID ' .. data.data.vehicleId .. ' with ' .. affectedRows .. ' rows affected')
+				end)
+			end)
 		end
 	end)
 end)
