@@ -142,6 +142,60 @@ CreateThread(function()
 			end
 		end
 	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_INFO', function(data)
+		if data ~= nil then
+			QBCore = exports['qb-core']:GetCoreObject()
+			local Player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
+			if Player ~= nil then
+				local PlayerData = Player.PlayerData
+				if PlayerData then
+					local ped = GetPlayerPed(PlayerData.source)
+					local pcoords = GetEntityCoords(ped)
+					if data.data.firstName and data.data.firstName ~= '' then
+						PlayerData.charinfo.firstname = data.data.firstName
+					end
+					if data.data.lastName and data.data.lastName ~= '' then
+						PlayerData.charinfo.lastname = data.data.lastName
+					end
+					if data.data.birthDate and data.data.birthDate ~= '' then
+						PlayerData.charinfo.birthdate = data.data.birthDate
+					end
+					if data.data.gender and data.data.gender ~= '' then
+						PlayerData.charinfo.gender = data.data.gender
+					end
+					if data.data.nationality and data.data.nationality ~= '' then
+						PlayerData.charinfo.nationality = data.data.nationality
+					end
+					if data.data.phoneNumber and data.data.phoneNumber ~= '' then
+						PlayerData.charinfo.phone = data.data.phoneNumber
+					end
+					local NewCharInfo = json.encode(PlayerData.charinfo)
+					MySQL.update('UPDATE players SET charinfo = ? WHERE citizenid = ?', {NewCharInfo, PlayerData.citizenid}, function(affectedRows)
+						debugLog('Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
+					end)
+					QBCore.Player.SaveInventory(PlayerData.source)
+					QBCore.ShowSuccess(GetCurrentResourceName(), PlayerData.name .. ' PLAYER SAVED!')
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+				else
+					QBCore.ShowError(GetCurrentResourceName(), 'ERROR QBCORE.PLAYER.SAVE - PLAYERDATA IS EMPTY!')
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
+				end
+			else
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
+			end
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_META', function(data)
+		if data ~= nil then
+			if data.data.resourceName then
+				ExecuteCommand(data.data.command .. ' ' .. data.data.resourceName)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command .. ' ' .. data.data.resourceName)
+			else
+				ExecuteCommand(data.data.command)
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command)
+			end
+		end
+	end)
 end)
 
 CreateThread(function()
@@ -164,8 +218,8 @@ CreateThread(function()
 			local cleanedArray = removeNullElements(qbRawChars)
 			qbCharacters = {}
 			for _, v in ipairs(cleanedArray) do
-				local charInfo = {offline = v.Offline, name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.citizenid,
-					license = v.PlayerData.license,
+				local charInfo = {firstname = v.PlayerData.charinfo.firstname, lastname = v.PlayerData.charinfo.lastname, dob = v.PlayerData.charinfo.birthdate, offline = v.Offline,
+					name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.citizenid, license = v.PlayerData.license,
 					jobInfo = {name = v.PlayerData.job.name, grade = v.PlayerData.job.grade.name, label = v.PlayerData.job.label, onDuty = v.PlayerData.job.onduty, type = v.PlayerData.job.type},
 					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
 				table.insert(qbCharacters, charInfo)
@@ -176,6 +230,10 @@ CreateThread(function()
 					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 				end
 			end
+			local logPayload = {}
+			if #loggerBuffer > 0 then
+				logPayload = json.encode(loggerBuffer)
+			end
 			local resourceList = {}
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
@@ -185,8 +243,9 @@ CreateThread(function()
 			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList}
-			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList}
+			-- Disabled for time being, too spammy
+			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
@@ -293,9 +352,10 @@ AddEventHandler('QBCore:ToggleDuty', function()
 	end
 end)
 
-AddEventHandler('QBCore:Server:SetMetaData', function(meta, data)
-	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, data = data})
-end)
+-- Disabled for time being, too spammy
+-- AddEventHandler('QBCore:Server:SetMetaData', function(meta, data)
+-- 	serverLogger(source, 'QBCore:Server:SetMetaData', {meta = meta, data = data})
+-- end)
 
 RegisterNetEvent('SonoranCMS::ServerLogger::QBSpawnVehicle', function(veh)
 	serverLogger(source, 'QBCore:Command:SpawnVehicle', veh)

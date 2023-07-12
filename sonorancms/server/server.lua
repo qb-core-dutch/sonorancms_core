@@ -260,10 +260,12 @@ function performApiRequest(postData, type, cb)
 	end
 	if rateLimitedEndpoints[type] == nil then
 		PerformHttpRequestS(url, function(statusCode, res, headers)
-			if Config.debug_mode then
+			if Config.debug_mode and type ~= 'GAMESTATE' then
 				debugLog('API Result:', tostring(res))
 			end
-			debugLog(('type %s called with post data %s to url %s'):format(type, json.encode(payload), url))
+			if type ~= 'GAMESTATE' then
+				debugLog(('type %s called with post data %s to url %s'):format(type, json.encode(payload), url))
+			end
 			if statusCode == 200 or statusCode == 201 and res ~= nil then
 				debugLog('result: ' .. tostring(res))
 				if res == 'Sonoran CMS: Backend Service Reached' or res == 'Backend Service Reached' then
