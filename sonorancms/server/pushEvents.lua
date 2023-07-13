@@ -56,6 +56,7 @@ CreateThread(function()
 				local targetPlayerName = GetPlayerName(targetPlayer)
 				DropPlayer(targetPlayer, reason)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' dropping player ' .. targetPlayerName .. ' for reason: ' .. reason)
+				manuallySendPayload()
 			else
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
 			end
@@ -81,6 +82,7 @@ CreateThread(function()
 					Player.Functions.SetMoney(data.data.moneyType, data.data.amount)
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug',
 					             'Received push event: ' .. data.type .. ' setting player ' .. GetPlayerName(targetPlayer) .. '\'s ' .. data.data.moneyType .. ' money to ' .. data.data.amount)
+					manuallySendPayload()
 				end
 			else
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
@@ -96,6 +98,7 @@ CreateThread(function()
 				end
 			end
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' despawning vehicle with handle ' .. data.data.vehicleHandle)
+			manuallySendPayload()
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
 		end
@@ -109,6 +112,7 @@ CreateThread(function()
 				end
 			end
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' repairing vehicle with handle ' .. data.data.vehicleHandle)
+			manuallySendPayload()
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but vehicle with handle ' .. data.data.vehicleHandle .. ' was not found')
 		end
@@ -126,6 +130,7 @@ CreateThread(function()
 				local targetPlayerName = GetPlayerName(targetPlayer)
 				TriggerClientEvent('SonoranCMS::core::HandleWarnedPlayer', targetPlayer, data.data.message)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' warning player ' .. targetPlayerName .. ' for reason: ' .. data.data.message)
+				manuallySendPayload()
 			else
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
 			end
@@ -136,9 +141,11 @@ CreateThread(function()
 			if data.data.resourceName then
 				ExecuteCommand(data.data.command .. ' ' .. data.data.resourceName)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command .. ' ' .. data.data.resourceName)
+				manuallySendPayload()
 			else
 				ExecuteCommand(data.data.command)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' executing command ' .. data.data.command)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -174,6 +181,7 @@ CreateThread(function()
 					debugLog('Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
 				end)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+				manuallySendPayload()
 			end)
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
@@ -227,6 +235,7 @@ CreateThread(function()
 								function(affectedRows)
 									debugLog('Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
 								end)
+				manuallySendPayload()
 			end)
 		end
 	end)
@@ -244,6 +253,7 @@ CreateThread(function()
 					debugLog('Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
 				end)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+				manuallySendPayload()
 			end)
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
@@ -259,6 +269,7 @@ CreateThread(function()
 				MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.citizenId, data.data.vehicleId}, function(affectedRows)
 					debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.citizenId .. ' with ' .. affectedRows .. ' rows affected')
 				end)
+				manuallySendPayload()
 			end)
 		end
 	end)
@@ -272,6 +283,7 @@ CreateThread(function()
 				MySQL.update('UPDATE player_vehicles SET engine = ?, body = ? WHERE id = ?', {1000, 1000, data.data.vehicleId}, function(affectedRows)
 					debugLog('Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
 				end)
+				manuallySendPayload()
 			end)
 		end
 	end)
@@ -285,6 +297,7 @@ CreateThread(function()
 				MySQL.query('DELETE FROM player_vehicles WHERE id = ?', {data.data.vehicleId}, function(affectedRows)
 					debugLog('Deleted vehicle with ID ' .. data.data.vehicleId .. ' with ' .. affectedRows .. ' rows affected')
 				end)
+				manuallySendPayload()
 			end)
 		end
 	end)
@@ -316,10 +329,10 @@ CreateThread(function()
 					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 						id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
 						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
-						if qbCharInfo then
-							charInfo.offline = false
-							charInfo.source = qbCharInfo.PlayerData.source
-						end
+					if qbCharInfo then
+						charInfo.offline = false
+						charInfo.source = qbCharInfo.PlayerData.source
+					end
 					table.insert(qbCharacters, charInfo)
 				end
 			end)
@@ -400,6 +413,110 @@ CreateThread(function()
 		Wait(60000)
 	end
 end)
+
+--- Manually send the GAMESTATE payload
+function manuallySendPayload()
+	local systemInfo = exports['sonorancms']:getSystemInfo()
+	local activePlayers = {}
+	for i = 0, GetNumPlayerIndices() - 1 do
+		local player = GetPlayerFromIndex(i)
+		local playerInfo = {name = GetPlayerName(player), ping = GetPlayerPing(player), source = player, identifiers = GetPlayerIdentifiers(player)}
+		table.insert(activePlayers, playerInfo)
+	end
+	if Config.framework == 'qb-core' then
+		QBCore = exports['qb-core']:GetCoreObject()
+		qbCharacters = {}
+		MySQL.query('SELECT * FROM players', function(row)
+			for _, v in ipairs(row) do
+				local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
+				v.charinfo = json.decode(v.charinfo)
+				v.job = json.decode(v.job)
+				v.money = json.decode(v.money)
+				local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
+					id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
+					money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+				if qbCharInfo then
+					charInfo.offline = false
+					charInfo.source = qbCharInfo.PlayerData.source
+				end
+				table.insert(qbCharacters, charInfo)
+			end
+		end)
+		for i = 0, GetNumPlayerIndices() - 1 do
+			local p = GetPlayerFromIndex(i)
+			if p ~= nil then
+				TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
+			end
+		end
+		local logPayload = {}
+		if #loggerBuffer > 0 then
+			logPayload = json.encode(loggerBuffer)
+		end
+		local resourceList = {}
+		for i = 0, GetNumResources(), 1 do
+			local resource_name = GetResourceByFindIndex(i)
+			if resource_name then
+				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name)})
+			end
+		end
+		local characterVehicles = {}
+		MySQL.query('SELECT * FROM player_vehicles', function(row)
+			for _, v in ipairs(row) do
+				vehicle = {}
+				vehicle.id = v.id
+				vehicle.citizenid = v.citizenid
+				vehicle.garage = v.garage
+				vehicle.model = v.vehicle
+				vehicle.plate = v.plate
+				vehicle.state = v.state
+				vehicle.fuel = v.fuel
+				vehicle.engine = v.engine
+				vehicle.body = v.body
+				vehicle.mileage = v.mileage
+				vehicle.balance = v.balance
+				vehicle.paymentAmount = v.paymentamount
+				vehicle.paymentsLeft = v.paymentsleft
+				vehicle.financeTime = v.financetime
+				vehicle.depotPrice = v.depotprice
+				vehicle.displayName = v.vehicle
+				table.insert(characterVehicles, vehicle)
+			end
+		end)
+		local jobTable = {}
+		for i, v in pairs(QBCore.Shared.Jobs) do
+			local gradesTable = {}
+			for _, g in pairs(v.grades) do
+				table.insert(gradesTable, {name = g.name, payment = g.payment})
+			end
+			table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
+		end
+		local gangTable = {}
+		for i, v in pairs(QBCore.Shared.Gangs) do
+			local gradesTable = {}
+			for _, g in pairs(v.grades) do
+				table.insert(gradesTable, {name = g.name, isBoss = g.isboss})
+			end
+			table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
+		end
+		-- Awaiting garage update
+		-- local QBGarages = exports['qb-garages']:getAllGarages()
+		Wait(5000)
+		apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
+			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
+			gangs = gangTable}
+		-- Disabled for time being, too spammy
+		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
+		-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+		performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
+			Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
+			if not ok then
+				logError('API_ERROR')
+				Config.critError = true
+				return
+			end
+		end)
+	end
+end
 
 RegisterConsoleListener(function(channel, message)
 	serverLogger(0, 'CONSOLE_LOG', {channel = channel, message = message})
