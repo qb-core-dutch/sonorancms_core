@@ -356,9 +356,26 @@ CreateThread(function()
 					table.insert(characterVehicles, vehicle)
 				end
 			end)
+			local jobTable = {}
+			for _, v in ipairs(QBCore.Shared.Jobs) do
+				local gradesTable = {}
+				for _, g in ipairs(v.grades) do
+					table.insert(gradesTable, {name = g.name, payment = g.payment})
+				end
+				table.insert(jobTable, {id = v, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
+			end
+			local gangTable = {}
+			for _, v in ipairs(QBCore.Shared.Gangs) do
+				local gradesTable = {}
+				for _, g in ipairs(v.grades) do
+					table.insert(gradesTable, {name = g.name, isBoss = g.isboss})
+				end
+				table.insert(gangTable, {id = v, label = v.label, grades = gradesTable})
+			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles}
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
+				gangs = gangTable}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
