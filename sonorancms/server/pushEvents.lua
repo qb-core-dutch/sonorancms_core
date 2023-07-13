@@ -356,6 +356,8 @@ CreateThread(function()
 					table.insert(characterVehicles, vehicle)
 				end
 			end)
+			-- Awaiting garage update
+			-- local QBGarages = exports['qb-garages']:getAllGarages()
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles}
