@@ -306,16 +306,15 @@ CreateThread(function()
 		end
 		if Config.framework == 'qb-core' then
 			QBCore = exports['qb-core']:GetCoreObject()
-			qbRawChars = QBCore.Functions.GetQBPlayers()
-			local cleanedArray = removeNullElements(qbRawChars)
 			qbCharacters = {}
-			for _, v in ipairs(cleanedArray) do
-				local charInfo = {firstname = v.PlayerData.charinfo.firstname, lastname = v.PlayerData.charinfo.lastname, dob = v.PlayerData.charinfo.birthdate, offline = v.Offline,
-					name = v.PlayerData.charinfo.firstname .. ' ' .. v.PlayerData.charinfo.lastname, id = v.PlayerData.charinfo.id, citizenid = v.PlayerData.citizenid, license = v.PlayerData.license,
-					jobInfo = {name = v.PlayerData.job.name, grade = v.PlayerData.job.grade.name, label = v.PlayerData.job.label, onDuty = v.PlayerData.job.onduty, type = v.PlayerData.job.type},
-					money = {bank = v.PlayerData.money.bank, cash = v.PlayerData.money.cash, crypto = v.PlayerData.money.crypto}, source = v.PlayerData.source}
-				table.insert(qbCharacters, charInfo)
-			end
+			MySQL.query('SELECT * FROM players', function(row)
+				for _, v in ipairs(row) do
+					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = v.Offline, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
+						id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
+						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, source = v.source, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+					table.insert(qbCharacters, charInfo)
+				end
+			end)
 			for i = 0, GetNumPlayerIndices() - 1 do
 				local p = GetPlayerFromIndex(i)
 				if p ~= nil then
@@ -376,7 +375,7 @@ CreateThread(function()
 			-- local QBGarages = exports['qb-garages']:getAllGarages()
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
+				players = activePlayers, offlineCharacters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
 				gangs = gangTable}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
