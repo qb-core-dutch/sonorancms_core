@@ -309,9 +309,17 @@ CreateThread(function()
 			qbCharacters = {}
 			MySQL.query('SELECT * FROM players', function(row)
 				for _, v in ipairs(row) do
-					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = v.Offline, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
+					local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
+					v.charinfo = json.decode(v.charinfo)
+					v.job = json.decode(v.job)
+					v.money = json.decode(v.money)
+					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 						id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
-						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, source = v.source, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+						if qbCharInfo then
+							charInfo.offline = false
+							charInfo.source = qbCharInfo.PlayerData.source
+						end
 					table.insert(qbCharacters, charInfo)
 				end
 			end)
