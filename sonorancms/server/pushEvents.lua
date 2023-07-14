@@ -159,27 +159,27 @@ CreateThread(function()
 				end
 				local PlayerData = row
 				PlayerData.charinfo = json.decode(PlayerData.charinfo)
-				if data.data.charInfo.firstName ~= '' then
+				if data.data.charInfo.firstName and data.data.charInfo.firstName ~= '' then
 					debugLog('Setting first name to ' .. data.data.charInfo.firstName)
 					PlayerData.charinfo.firstname = data.data.charInfo.firstName
 				end
-				if data.data.charInfo.lastName ~= '' then
+				if data.data.charInfo.lastName and data.data.charInfo.lastName ~= '' then
 					debugLog('Setting last name to ' .. data.data.charInfo.lastName)
 					PlayerData.charinfo.lastname = data.data.charInfo.lastName
 				end
-				if data.data.charInfo.birthDate ~= '' then
+				if data.data.charInfo.birthDate and data.data.charInfo.birthDate ~= '' then
 					debugLog('Setting birth date to ' .. data.data.charInfo.birthDate)
 					PlayerData.charinfo.birthdate = data.data.charInfo.birthDate
 				end
-				if data.data.charInfo.gender ~= '' then
+				if data.data.charInfo.gender and data.data.charInfo.gender ~= '' then
 					debugLog('Setting gender to ' .. data.data.charInfo.gender)
 					PlayerData.charinfo.gender = data.data.charInfo.gender
 				end
-				if data.data.charInfo.nationality ~= '' then
+				if data.data.charInfo.nationality and data.data.charInfo.nationality ~= '' then
 					debugLog('Setting nationality to ' .. data.data.charInfo.nationality)
 					PlayerData.charinfo.nationality = data.data.charInfo.nationality
 				end
-				if data.data.charInfo.phoneNumber ~= '' then
+				if data.data.charInfo.phoneNumber and data.data.charInfo.phoneNumber ~= '' then
 					debugLog('Setting phone number to ' .. data.data.charInfo.phoneNumber)
 					PlayerData.charinfo.phone = data.data.charInfo.phoneNumber
 				end
