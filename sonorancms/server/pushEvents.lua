@@ -152,7 +152,6 @@ CreateThread(function()
 	end)
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_INFO', function(data)
 		if data ~= nil then
-			debugLog('Received push event: ' .. data.type .. ' updating character info for ' .. data.data.citizenId .. ' with ' .. json.encode(data.data))
 			MySQL.single('SELECT * FROM `players` WHERE `citizenid` = ? LIMIT 1', {data.data.citizenId}, function(row)
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
@@ -160,29 +159,29 @@ CreateThread(function()
 				end
 				local PlayerData = row
 				PlayerData.charinfo = json.decode(PlayerData.charinfo)
-				if data.data.charinfo.firstName ~= '' then
-					debugLog('Setting first name to ' .. data.data.charinfo.firstName)
-					PlayerData.charinfo.firstname = data.data.charinfo.firstName
+				if data.data.charInfo.firstName ~= '' then
+					debugLog('Setting first name to ' .. data.data.charInfo.firstName)
+					PlayerData.charinfo.firstname = data.data.charInfo.firstName
 				end
-				if data.data.charinfo.lastName ~= '' then
-					debugLog('Setting last name to ' .. data.data.charinfo.lastName)
-					PlayerData.charinfo.lastname = data.data.charinfo.lastName
+				if data.data.charInfo.lastName ~= '' then
+					debugLog('Setting last name to ' .. data.data.charInfo.lastName)
+					PlayerData.charinfo.lastname = data.data.charInfo.lastName
 				end
-				if data.data.charinfo.birthDate ~= '' then
-					debugLog('Setting birth date to ' .. data.data.charinfo.birthDate)
-					PlayerData.charinfo.birthdate = data.data.charinfo.birthDate
+				if data.data.charInfo.birthDate ~= '' then
+					debugLog('Setting birth date to ' .. data.data.charInfo.birthDate)
+					PlayerData.charinfo.birthdate = data.data.charInfo.birthDate
 				end
-				if data.data.charinfo.gender ~= '' then
-					debugLog('Setting gender to ' .. data.data.charinfo.gender)
-					PlayerData.charinfo.gender = data.data.charinfo.gender
+				if data.data.charInfo.gender ~= '' then
+					debugLog('Setting gender to ' .. data.data.charInfo.gender)
+					PlayerData.charinfo.gender = data.data.charInfo.gender
 				end
-				if data.data.charinfo.nationality ~= '' then
-					debugLog('Setting nationality to ' .. data.data.charinfo.nationality)
-					PlayerData.charinfo.nationality = data.data.charinfo.nationality
+				if data.data.charInfo.nationality ~= '' then
+					debugLog('Setting nationality to ' .. data.data.charInfo.nationality)
+					PlayerData.charinfo.nationality = data.data.charInfo.nationality
 				end
-				if data.data.charinfo.phoneNumber ~= '' then
-					debugLog('Setting phone number to ' .. data.data.charinfo.phoneNumber)
-					PlayerData.charinfo.phone = data.data.phoneNumber
+				if data.data.charInfo.phoneNumber ~= '' then
+					debugLog('Setting phone number to ' .. data.data.charInfo.phoneNumber)
+					PlayerData.charinfo.phone = data.data.charInfo.phoneNumber
 				end
 				local NewCharInfo = json.encode(PlayerData.charinfo)
 				MySQL.update('UPDATE players SET charinfo = ? WHERE citizenid = ?', {NewCharInfo, PlayerData.citizenid}, function(affectedRows)
