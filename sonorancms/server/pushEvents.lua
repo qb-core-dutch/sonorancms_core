@@ -160,21 +160,27 @@ CreateThread(function()
 				local PlayerData = row
 				PlayerData.charinfo = json.decode(PlayerData.charinfo)
 				if data.data.firstName and data.data.firstName ~= '' then
+					debugLog('Setting first name to ' .. data.data.firstName)
 					PlayerData.charinfo.firstname = data.data.firstName
 				end
 				if data.data.lastName and data.data.lastName ~= '' then
+					debugLog('Setting last name to ' .. data.data.lastName)
 					PlayerData.charinfo.lastname = data.data.lastName
 				end
 				if data.data.birthDate and data.data.birthDate ~= '' then
+					debugLog('Setting birth date to ' .. data.data.birthDate)
 					PlayerData.charinfo.birthdate = data.data.birthDate
 				end
 				if data.data.gender and data.data.gender ~= '' then
+					debugLog('Setting gender to ' .. data.data.gender)
 					PlayerData.charinfo.gender = data.data.gender
 				end
 				if data.data.nationality and data.data.nationality ~= '' then
+					debugLog('Setting nationality to ' .. data.data.nationality)
 					PlayerData.charinfo.nationality = data.data.nationality
 				end
 				if data.data.phoneNumber and data.data.phoneNumber ~= '' then
+					debugLog('Setting phone number to ' .. data.data.phoneNumber)
 					PlayerData.charinfo.phone = data.data.phoneNumber
 				end
 				local NewCharInfo = json.encode(PlayerData.charinfo)
