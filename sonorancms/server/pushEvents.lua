@@ -47,7 +47,7 @@ CreateThread(function()
 			local targetPlayer = nil
 			for i = 0, GetNumPlayerIndices() - 1 do
 				local p = GetPlayerFromIndex(i)
-				if p == data.data.playerSource then
+				if tonumber(p) == tonumber(data.data.playerSource) then
 					targetPlayer = p
 				end
 			end
@@ -62,12 +62,13 @@ CreateThread(function()
 			end
 		end
 	end)
+	-- TODO: Change to go via CitizenID and directly edit the database
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_PLAYER_MONEY', function(data)
 		if data ~= nil then
 			local targetPlayer = nil
 			for i = 0, GetNumPlayerIndices() - 1 do
 				local p = GetPlayerFromIndex(i)
-				if p == data.data.playerSource then
+				if tonumber(p) == tonumber(data.data.playerSource) then
 					targetPlayer = tonumber(p)
 				end
 			end
@@ -122,7 +123,7 @@ CreateThread(function()
 			local targetPlayer = nil
 			for i = 0, GetNumPlayerIndices() - 1 do
 				local p = GetPlayerFromIndex(i)
-				if p == data.data.playerSource then
+				if tonumber(p) == tonumber(data.data.playerSource) then
 					targetPlayer = p
 				end
 			end
@@ -346,6 +347,7 @@ CreateThread(function()
 			if #loggerBuffer > 0 then
 				logPayload = json.encode(loggerBuffer)
 			end
+			-- TODO: Change resources to also send their path to allow sorting by folder
 			local resourceList = {}
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
@@ -392,6 +394,7 @@ CreateThread(function()
 				end
 				table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 			end
+			-- TODO: Add garage support
 			-- Awaiting garage update
 			-- local QBGarages = exports['qb-garages']:getAllGarages()
 			Wait(5000)
