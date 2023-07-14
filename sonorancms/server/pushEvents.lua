@@ -62,32 +62,30 @@ CreateThread(function()
 			end
 		end
 	end)
-	-- TODO: Change to go via CitizenID and directly edit the database
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_PLAYER_MONEY', function(data)
 		if data ~= nil then
-			local targetPlayer = nil
-			for i = 0, GetNumPlayerIndices() - 1 do
-				local p = GetPlayerFromIndex(i)
-				if tonumber(p) == tonumber(data.data.playerSource) then
-					targetPlayer = tonumber(p)
+			MySQL.single('SELECT * FROM `players` WHERE `citizenid` = ? LIMIT 1', {data.data.citizenId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
+					return
 				end
-			end
-			if targetPlayer ~= nil then
-				if Config.framework == 'qb-core' then
-					QBCore = exports['qb-core']:GetCoreObject()
-					local Player = QBCore.Functions.GetPlayer(targetPlayer)
-					if Player == nil then
-						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found in qb-core')
-						return
+				local PlayerData = row
+				local PlayerDataMoney = json.decode(PlayerData.money)
+				local validType = false
+				for k, v in pairs(PlayerDataMoney) do
+					if k == data.data.moneyType then
+						PlayerDataMoney[k] = data.data.amount
+						validType = true
 					end
-					Player.Functions.SetMoney(data.data.moneyType, data.data.amount)
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug',
-					             'Received push event: ' .. data.type .. ' setting player ' .. GetPlayerName(targetPlayer) .. '\'s ' .. data.data.moneyType .. ' money to ' .. data.data.amount)
-					manuallySendPayload()
 				end
-			else
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but player with source ' .. data.data.playerSource .. ' was not found')
-			end
+				PlayerDataMoney = json.encode(PlayerDataMoney)
+				if validType then
+					MySQL.update('UPDATE players SET money = ? WHERE citizenid = ?', {PlayerDataMoney, data.data.citizenId})
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' setting money for ' .. PlayerData.name .. ' to ' .. PlayerDataMoney)
+				else
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but money type ' .. data.data.moneyType .. ' was not found')
+				end
+			end)
 		end
 	end)
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_DESPAWN_VEHICLE', function(data)
