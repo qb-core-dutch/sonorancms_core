@@ -267,8 +267,8 @@ CreateThread(function()
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
 					return
 				end
-				MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.citizenId, data.data.vehicleId}, function(affectedRows)
-					debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.citizenId .. ' with ' .. affectedRows .. ' rows affected')
+				MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.newCitizenId, data.data.vehicleId}, function(affectedRows)
+					debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.newCitizenId .. ' with ' .. affectedRows .. ' rows affected')
 				end)
 				manuallySendPayload()
 			end)

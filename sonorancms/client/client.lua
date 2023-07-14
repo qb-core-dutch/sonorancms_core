@@ -48,14 +48,14 @@ RegisterNetEvent('SonoranCMS::core::DeleteVehicle', function(vehHandle)
 					end
 				end
 			end
-			if not NetworkHasControlOfEntity() then
-				if NetworkRequestControlOfEntity() then
+			if not NetworkHasControlOfEntity(vehHandle) then
+				if NetworkRequestControlOfEntity(vehHandle) then
 					vehDriver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(vehDriver))
 					TriggerServerEvent('SonoranCMS::core::DeleteVehicleCB', vehDriver, passengers)
 					SetEntityAsMissionEntity(vehHandle, true, true)
 					DeleteEntity(vehHandle)
 				else
-					TriggerServerEvent('SonoranCMS::core:writeLog', 'debug', 'Failed to request control of entity ' .. vehHandle)
+					print('Failed to request control of entity ' .. vehHandle)
 				end
 			else
 				vehDriver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(vehDriver))
@@ -81,14 +81,14 @@ RegisterNetEvent('SonoranCMS::core::RepairVehicle', function(vehHandle)
 					end
 				end
 			end
-			if not NetworkHasControlOfEntity() then
-				if NetworkRequestControlOfEntity() then
+			if not NetworkHasControlOfEntity(vehHandle) then
+				if NetworkRequestControlOfEntity(vehHandle) then
 					vehDriver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(vehDriver))
 					TriggerServerEvent('SonoranCMS::core::RepairVehicleCB', vehDriver, passengers)
 					SetVehicleFixed(vehHandle)
 					SetVehicleDeformationFixed(vehHandle)
 				else
-					TriggerServerEvent('SonoranCMS::core:writeLog', 'debug', 'Failed to request control of entity ' .. vehHandle)
+					print('Failed to request control of entity ' .. vehHandle)
 				end
 			else
 				vehDriver = GetPlayerServerId(NetworkGetPlayerIndexFromPed(vehDriver))
