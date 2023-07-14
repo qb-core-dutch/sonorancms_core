@@ -198,49 +198,49 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
 					return
+				else
+					local vehData = row
+					if data.data.plate and data.data.plate ~= '' then
+						vehData.plate = data.data.plate
+					end
+					if data.data.garage and data.data.garage ~= '' then
+						vehData.garage = data.data.garage
+					end
+					if data.data.fuel and data.data.fuel ~= '' then
+						vehData.fuel = data.data.fuel
+					end
+					if data.data.engine and data.data.engine ~= '' then
+						vehData.engine = data.data.engine
+					end
+					if data.data.body and data.data.body ~= '' then
+						vehData.body = data.data.body
+					end
+					if data.data.state and data.data.state ~= '' then
+						vehData.state = data.data.state
+					end
+					if data.data.mileage and data.data.mileage ~= '' then
+						vehData.drivingdistance = data.data.mileage
+					end
+					if data.data.balance and data.data.balance ~= '' then
+						vehData.balance = data.data.balance
+					end
+					if data.data.paymentAmount and data.data.paymentAmount ~= '' then
+						vehData.paymentamount = data.data.paymentAmount
+					end
+					if data.data.paymentsLeft and data.data.paymentsLeft ~= '' then
+						vehData.paymentsleft = data.data.paymentsLeft
+					end
+					if data.data.financeTime and data.data.financeTime ~= '' then
+						vehData.financetime = data.data.financeTime
+					end
+					MySQL.update(
+									'UPDATE player_vehicles SET plate = ?, garage = ?, fuel = ?, engine = ?, body = ?, state = ?, drivingdistance = ?, balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE id = ?',
+									{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.drivingdistance, vehData.balance, vehData.paymentamount, vehData.financetime, data.data.vehicleId},
+									function(affectedRows)
+										debugLog('Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. json.encode(vehData) .. ' with ' .. affectedRows .. ' rows affected')
+									end)
+					manuallySendPayload()
 				end
-				local vehData = row
-				if data.data.plate and data.data.plate ~= '' then
-					vehData.plate = data.data.plate
-				end
-				if data.data.garage and data.data.garage ~= '' then
-					vehData.garage = data.data.garage
-				end
-				if data.data.fuel and data.data.fuel ~= '' then
-					vehData.fuel = data.data.fuel
-				end
-				if data.data.engine and data.data.engine ~= '' then
-					vehData.engine = data.data.engine
-				end
-				if data.data.body and data.data.body ~= '' then
-					vehData.body = data.data.body
-				end
-				if data.data.state and data.data.state ~= '' then
-					vehData.state = data.data.state
-				end
-				if data.data.mileage and data.data.mileage ~= '' then
-					vehData.mileage = data.data.mileage
-				end
-				if data.data.balance and data.data.balance ~= '' then
-					vehData.balance = data.data.balance
-				end
-				if data.data.paymentAmount and data.data.paymentAmount ~= '' then
-					vehData.paymentamount = data.data.paymentAmount
-				end
-				if data.data.paymentsLeft and data.data.paymentsLeft ~= '' then
-					vehData.paymentsleft = data.data.paymentsLeft
-				end
-				if data.data.financeTime and data.data.financeTime ~= '' then
-					vehData.financetime = data.data.financeTime
-				end
-				vehData = json.encode(vehData)
-				MySQL.update(
-								'UPDATE player_vehicles SET plate = ?, garage = ?, fuel = ?, engine = ?, body = ?, state = ?, mileage = ?, balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE id = ?',
-								{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.mileage, vehData.balance, vehData.paymentamount, vehData.financetime, data.data.vehicleId},
-								function(affectedRows)
-									debugLog('Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
-								end)
-				manuallySendPayload()
 			end)
 		end
 	end)
@@ -250,15 +250,16 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the PlayerData for ' .. data.data.citizenId .. ' was not found')
 					return
+				else
+					local PlayerData = row
+					PlayerData.charinfo = json.decode(PlayerData.charinfo)
+					MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, vehicle, plate, state) VALUES (?, ?, ?, ?, ?)',
+					             {PlayerData.citizenid, data.data.garage, data.data.model, data.data.plate, data.data.state}, function(affectedRows)
+						debugLog('Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
+					end)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
+					manuallySendPayload()
 				end
-				local PlayerData = row
-				PlayerData.charinfo = json.decode(PlayerData.charinfo)
-				MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, vehicle, plate, state) VALUES (?, ?, ?, ?, ?)',
-				             {PlayerData.citizenid, data.data.garage, data.data.model, data.data.plate, data.data.state}, function(affectedRows)
-					debugLog('Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
-				end)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
-				manuallySendPayload()
 			end)
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but character ID ' .. data.data.citizenId .. ' was not found')
@@ -270,11 +271,12 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
 					return
+				else
+					MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.newCitizenId, data.data.vehicleId}, function(affectedRows)
+						debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.newCitizenId .. ' with ' .. affectedRows .. ' rows affected')
+					end)
+					manuallySendPayload()
 				end
-				MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.newCitizenId, data.data.vehicleId}, function(affectedRows)
-					debugLog('Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.newCitizenId .. ' with ' .. affectedRows .. ' rows affected')
-				end)
-				manuallySendPayload()
 			end)
 		end
 	end)
@@ -284,11 +286,12 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
 					return
+				else
+					MySQL.update('UPDATE player_vehicles SET engine = ?, body = ? WHERE id = ?', {1000, 1000, data.data.vehicleId}, function(affectedRows)
+						debugLog('Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
+					end)
+					manuallySendPayload()
 				end
-				MySQL.update('UPDATE player_vehicles SET engine = ?, body = ? WHERE id = ?', {1000, 1000, data.data.vehicleId}, function(affectedRows)
-					debugLog('Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
-				end)
-				manuallySendPayload()
 			end)
 		end
 	end)
@@ -298,11 +301,12 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but the vehicle with ID ' .. data.data.vehicleId .. ' was not found')
 					return
+				else
+					MySQL.query('DELETE FROM player_vehicles WHERE id = ?', {data.data.vehicleId}, function(affectedRows)
+						debugLog('Deleted vehicle with ID ' .. data.data.vehicleId .. ' with ' .. affectedRows .. ' rows affected')
+					end)
+					manuallySendPayload()
 				end
-				MySQL.query('DELETE FROM player_vehicles WHERE id = ?', {data.data.vehicleId}, function(affectedRows)
-					debugLog('Deleted vehicle with ID ' .. data.data.vehicleId .. ' with ' .. affectedRows .. ' rows affected')
-				end)
-				manuallySendPayload()
 			end)
 		end
 	end)
@@ -347,10 +351,6 @@ CreateThread(function()
 					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 				end
 			end
-			local logPayload = {}
-			if #loggerBuffer > 0 then
-				logPayload = json.encode(loggerBuffer)
-			end
 			-- TODO: Change resources to also send their path to allow sorting by folder
 			local resourceList = {}
 			for i = 0, GetNumResources(), 1 do
@@ -372,7 +372,7 @@ CreateThread(function()
 					vehicle.fuel = v.fuel
 					vehicle.engine = v.engine
 					vehicle.body = v.body
-					vehicle.mileage = v.mileage
+					vehicle.mileage = v.drivingdistance
 					vehicle.balance = v.balance
 					vehicle.paymentAmount = v.paymentamount
 					vehicle.paymentsLeft = v.paymentsleft
@@ -403,7 +403,7 @@ CreateThread(function()
 			-- local QBGarages = exports['qb-garages']:getAllGarages()
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
+				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
 				gangs = gangTable}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
@@ -455,10 +455,6 @@ function manuallySendPayload()
 				TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 			end
 		end
-		local logPayload = {}
-		if #loggerBuffer > 0 then
-			logPayload = json.encode(loggerBuffer)
-		end
 		local resourceList = {}
 		for i = 0, GetNumResources(), 1 do
 			local resource_name = GetResourceByFindIndex(i)
@@ -479,7 +475,7 @@ function manuallySendPayload()
 				vehicle.fuel = v.fuel
 				vehicle.engine = v.engine
 				vehicle.body = v.body
-				vehicle.mileage = v.mileage
+				vehicle.mileage = v.drivingdistance
 				vehicle.balance = v.balance
 				vehicle.paymentAmount = v.paymentamount
 				vehicle.paymentsLeft = v.paymentsleft
@@ -509,7 +505,7 @@ function manuallySendPayload()
 		-- local QBGarages = exports['qb-garages']:getAllGarages()
 		Wait(5000)
 		apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
-			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = logPayload, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
+			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
 			gangs = gangTable}
 		-- Disabled for time being, too spammy
 		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))

@@ -244,6 +244,7 @@ function performApiRequest(postData, type, cb)
 	local payload = {}
 	payload['id'] = Config.CommID
 	payload['key'] = Config.APIKey
+	payload['serverId'] = Config.serverId
 	payload['data'] = postData
 	payload['type'] = type
 	local endpoint = nil
