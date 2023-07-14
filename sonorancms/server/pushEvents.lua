@@ -360,7 +360,7 @@ CreateThread(function()
 				for _, v in ipairs(row) do
 					vehicle = {}
 					vehicle.id = v.id
-					vehicle.citizenid = v.citizenid
+					vehicle.citizenId = v.citizenid
 					vehicle.garage = v.garage
 					vehicle.model = v.vehicle
 					vehicle.plate = v.plate
