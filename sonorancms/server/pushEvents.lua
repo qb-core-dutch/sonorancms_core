@@ -366,7 +366,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validGangs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' removing gang ' .. data.data.gangId)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
 			end
 		end
@@ -435,7 +436,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validGangs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing gang ' .. data.data.id)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
 			end
 		end
@@ -505,7 +507,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validGangs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' adding gang ' .. data.data.id)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
 			end
 		end
@@ -579,7 +582,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validJobs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' removing job ' .. data.data.jobId)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
 			end
 		end
@@ -661,7 +665,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validJobs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing job ' .. data.data.id)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
 			end
 		end
@@ -744,7 +749,8 @@ CreateThread(function()
 				end
 				local modifiedData = convertToPlainText(validJobs)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' adding job ' .. data.data.id)
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
 			end
 		end
