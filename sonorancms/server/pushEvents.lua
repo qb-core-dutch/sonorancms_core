@@ -82,6 +82,7 @@ CreateThread(function()
 				if validType then
 					MySQL.update('UPDATE players SET money = ? WHERE citizenid = ?', {PlayerDataMoney, data.data.citizenId})
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' setting money for ' .. PlayerData.name .. ' to ' .. PlayerDataMoney)
+					manuallySendPayload()
 				else
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' but money type ' .. data.data.moneyType .. ' was not found')
 				end
@@ -369,6 +370,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -439,6 +441,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -510,6 +513,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving gangs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/gangs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -585,6 +589,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -668,6 +673,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -752,6 +758,7 @@ CreateThread(function()
 				-- Too spammy
 				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
 				SaveResourceFile('qb-core', './shared/jobs.lua', modifiedData, -1)
+				manuallySendPayload()
 			end
 		end
 	end)
@@ -900,6 +907,7 @@ function manuallySendPayload()
 				TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 			end
 		end
+		-- TODO: Change resources to also send their path to allow sorting by folder
 		local resourceList = {}
 		for i = 0, GetNumResources(), 1 do
 			local resource_name = GetResourceByFindIndex(i)
@@ -912,7 +920,7 @@ function manuallySendPayload()
 			for _, v in ipairs(row) do
 				vehicle = {}
 				vehicle.id = v.id
-				vehicle.citizenid = v.citizenid
+				vehicle.citizenId = v.citizenid
 				vehicle.garage = v.garage
 				vehicle.model = v.vehicle
 				vehicle.plate = v.plate
@@ -946,6 +954,7 @@ function manuallySendPayload()
 			end
 			table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 		end
+		-- TODO: Add garage support
 		-- Awaiting garage update
 		-- local QBGarages = exports['qb-garages']:getAllGarages()
 		Wait(5000)
