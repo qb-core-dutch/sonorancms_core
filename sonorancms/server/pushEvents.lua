@@ -808,7 +808,8 @@ CreateThread(function()
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
 				if resource_name then
-					table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name)})
+					local path = GetResourcePath(resource_name):match('.*/resources/(.*)')
+				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name), path = path})
 				end
 			end
 			local characterVehicles = {}
@@ -912,7 +913,8 @@ function manuallySendPayload()
 		for i = 0, GetNumResources(), 1 do
 			local resource_name = GetResourceByFindIndex(i)
 			if resource_name then
-				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name)})
+				local path = GetResourcePath(resource_name):match('.*/resources/(.*)')
+				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name), path = path})
 			end
 		end
 		local characterVehicles = {}
