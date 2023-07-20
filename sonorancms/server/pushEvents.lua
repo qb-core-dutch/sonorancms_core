@@ -803,7 +803,6 @@ CreateThread(function()
 					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 				end
 			end
-			-- TODO: Change resources to also send their path to allow sorting by folder
 			local resourceList = {}
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
@@ -908,7 +907,6 @@ function manuallySendPayload()
 				TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 			end
 		end
-		-- TODO: Change resources to also send their path to allow sorting by folder
 		local resourceList = {}
 		for i = 0, GetNumResources(), 1 do
 			local resource_name = GetResourceByFindIndex(i)
