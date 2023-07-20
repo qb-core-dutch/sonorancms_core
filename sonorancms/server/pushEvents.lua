@@ -10,18 +10,6 @@ local explosionTypes = {'GRENADE', 'GRENADELAUNCHER', 'STICKYBOMB', 'MOLOTOV', '
 	'BOMB_CLUSTER_SECONDARY', 'HUNTER_BARRAGE', 'HUNTER_CANNON', 'ROGUE_CANNON', 'MINE_UNDERWATER', 'ORBITAL_CANNON', 'BOMB_STANDARD_WIDE', 'EXPLOSIVEAMMO_SHOTGUN', 'OPPRESSOR2_CANNON', 'MORTAR_KINETIC',
 	'VEHICLEMINE_KINETIC', 'VEHICLEMINE_EMP', 'VEHICLEMINE_SPIKE', 'VEHICLEMINE_SLICK', 'VEHICLEMINE_TAR', 'SCRIPT_DRONE', 'RAYGUN', 'BURIEDMINE', 'SCRIPT_MISSIL'}
 
---- Removes all nil elements from an array
---- @param arr any
-local function removeNullElements(arr)
-	local result = {}
-	for _, value in ipairs(arr) do
-		if value ~= nil then
-			table.insert(result, value)
-		end
-	end
-	return result
-end
-
 --- logger
 --- Sends logs to the logging buffer, then to the SonoranCMS game panel
 ---@param src number the source of the player who did the action
@@ -771,7 +759,9 @@ CreateThread(function()
 			Wait(5000)
 			first = false
 		end
+		-- Getting System Info
 		local systemInfo = exports['sonorancms']:getSystemInfo()
+		-- Getting all active players on the server
 		local activePlayers = {}
 		for i = 0, GetNumPlayerIndices() - 1 do
 			local player = GetPlayerFromIndex(i)
@@ -779,8 +769,10 @@ CreateThread(function()
 			table.insert(activePlayers, playerInfo)
 		end
 		if Config.framework == 'qb-core' then
+			-- Getting QBCore object
 			QBCore = exports['qb-core']:GetCoreObject()
-			qbCharacters = {}
+			-- Query the DB for QB Players rather than using the function because the function only returns active ones
+			local qbCharacters = {}
 			MySQL.query('SELECT * FROM players', function(row)
 				for _, v in ipairs(row) do
 					local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
@@ -797,20 +789,23 @@ CreateThread(function()
 					table.insert(qbCharacters, charInfo)
 				end
 			end)
+			-- Request the game pool of vheicles to send all active vehicles in game
 			for i = 0, GetNumPlayerIndices() - 1 do
 				local p = GetPlayerFromIndex(i)
 				if p ~= nil then
 					TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 				end
 			end
+			-- Request all the resources and their valid paths relative to the resources folder
 			local resourceList = {}
 			for i = 0, GetNumResources(), 1 do
 				local resource_name = GetResourceByFindIndex(i)
 				if resource_name then
 					local path = GetResourcePath(resource_name):match('.*/resources/(.*)')
-				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name), path = path})
+					table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name), path = path})
 				end
 			end
+			-- Request all the saved player vehicles from the database
 			local characterVehicles = {}
 			MySQL.query('SELECT * FROM player_vehicles', function(row)
 				for _, v in ipairs(row) do
@@ -834,29 +829,89 @@ CreateThread(function()
 					table.insert(characterVehicles, vehicle)
 				end
 			end)
+			-- Request the active runtime jobs and their grades
 			local jobTable = {}
 			for i, v in pairs(QBCore.Shared.Jobs) do
 				local gradesTable = {}
-				for _, g in pairs(v.grades) do
-					table.insert(gradesTable, {name = g.name, payment = g.payment})
+				for h, g in pairs(v.grades) do
+					gradesTable[h] = {name = g.name, payment = g.payment, isBoss = g.isboss}
 				end
 				table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 			end
+			-- Request the active runtime gangs and their grades
 			local gangTable = {}
 			for i, v in pairs(QBCore.Shared.Gangs) do
 				local gradesTable = {}
-				for _, g in pairs(v.grades) do
-					table.insert(gradesTable, {name = g.name, isBoss = g.isboss})
+				for h, g in pairs(v.grades) do
+					gradesTable[h] = {name = g.name, isBoss = g.isboss}
 				end
 				table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 			end
+			-- Request the hardcoded jobs from the qb-core shared file (shared/jobs.lua)
+			local originalData = LoadResourceFile('qb-core', './shared/jobs.lua')
+			local validJobs = {}
+			local function filterJobs(jobs)
+				local validJobs = {}
+				for jobName, jobData in pairs(jobs) do
+					for h, j in pairs(jobData.grades) do
+						if j.isboss then
+							jobData.grades[h].isBoss = j.isboss
+						end
+					end
+					table.insert(validJobs, {id = jobName, label = jobData.label, grades = jobData.grades, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay})
+				end
+				return validJobs
+			end
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'jobData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedJobs = tempEnv.QBShared and tempEnv.QBShared.Jobs
+			if not loadedJobs or next(loadedJobs) == nil then
+				print('Error: QBShared.Jobs table is missing or empty.')
+				return
+			end
+			validJobs = filterJobs(loadedJobs)
+			-- Request the hardcoded gangs from the qb-core shared file (shared/gangs.lua)
+			local originalData = LoadResourceFile('qb-core', './shared/gangs.lua')
+			local validGangs = {}
+			local function filterGangs(gangs)
+				local validGangs = {}
+				for gangName, gangData in pairs(gangs) do
+					for h, j in pairs(gangData.grades) do
+						if j.isboss then
+							gangData.grades[h].isBoss = j.isboss
+						end
+					end
+					table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
+				end
+				return validGangs
+			end
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'gangData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedGangs = tempEnv.QBShared and tempEnv.QBShared.Gangs
+			if not loadedGangs or next(loadedGangs) == nil then
+				print('Error: QBShared.Gangs table is missing or empty.')
+				return
+			end
+			validGangs = filterGangs(loadedGangs)
 			-- TODO: Add garage support
 			-- Awaiting garage update
 			-- local QBGarages = exports['qb-garages']:getAllGarages()
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-				gangs = gangTable}
+				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 			-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
@@ -875,7 +930,9 @@ end)
 
 --- Manually send the GAMESTATE payload
 function manuallySendPayload()
+	-- Getting System Info
 	local systemInfo = exports['sonorancms']:getSystemInfo()
+	-- Getting all active players on the server
 	local activePlayers = {}
 	for i = 0, GetNumPlayerIndices() - 1 do
 		local player = GetPlayerFromIndex(i)
@@ -883,8 +940,10 @@ function manuallySendPayload()
 		table.insert(activePlayers, playerInfo)
 	end
 	if Config.framework == 'qb-core' then
+		-- Getting QBCore object
 		QBCore = exports['qb-core']:GetCoreObject()
-		qbCharacters = {}
+		-- Query the DB for QB Players rather than using the function because the function only returns active ones
+		local qbCharacters = {}
 		MySQL.query('SELECT * FROM players', function(row)
 			for _, v in ipairs(row) do
 				local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
@@ -901,12 +960,14 @@ function manuallySendPayload()
 				table.insert(qbCharacters, charInfo)
 			end
 		end)
+		-- Request the game pool of vheicles to send all active vehicles in game
 		for i = 0, GetNumPlayerIndices() - 1 do
 			local p = GetPlayerFromIndex(i)
 			if p ~= nil then
 				TriggerClientEvent('SonoranCMS::core::RequestGamePool', p)
 			end
 		end
+		-- Request all the resources and their valid paths relative to the resources folder
 		local resourceList = {}
 		for i = 0, GetNumResources(), 1 do
 			local resource_name = GetResourceByFindIndex(i)
@@ -915,6 +976,7 @@ function manuallySendPayload()
 				table.insert(resourceList, {name = resource_name, state = GetResourceState(resource_name), path = path})
 			end
 		end
+		-- Request all the saved player vehicles from the database
 		local characterVehicles = {}
 		MySQL.query('SELECT * FROM player_vehicles', function(row)
 			for _, v in ipairs(row) do
@@ -938,29 +1000,79 @@ function manuallySendPayload()
 				table.insert(characterVehicles, vehicle)
 			end
 		end)
+		-- Request the active runtime jobs and their grades
 		local jobTable = {}
 		for i, v in pairs(QBCore.Shared.Jobs) do
 			local gradesTable = {}
-			for _, g in pairs(v.grades) do
-				table.insert(gradesTable, {name = g.name, payment = g.payment})
+			for h, g in pairs(v.grades) do
+				gradesTable[h] = {name = g.name, payment = g.payment}
 			end
 			table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 		end
+		-- Request the active runtime gangs and their grades
 		local gangTable = {}
 		for i, v in pairs(QBCore.Shared.Gangs) do
 			local gradesTable = {}
-			for _, g in pairs(v.grades) do
-				table.insert(gradesTable, {name = g.name, isBoss = g.isboss})
+			for h, g in pairs(v.grades) do
+				gradesTable[h] = {name = g.name, isBoss = g.isboss}
 			end
 			table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 		end
+		-- Request the hardcoded jobs from the qb-core shared file (shared/jobs.lua)
+		local originalData = LoadResourceFile('qb-core', './shared/jobs.lua')
+		local validJobs = {}
+		local function filterJobs(jobs)
+			local validJobs = {}
+			for jobName, jobData in pairs(jobs) do
+				table.insert(validJobs, {id = jobName, label = jobData.label, grades = jobData.grades, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay})
+			end
+			return validJobs
+		end
+		local tempEnv = {}
+		setmetatable(tempEnv, {__index = _G})
+		local func, err = load(originalData, 'jobData', 't', tempEnv)
+		if not func then
+			print('Error loading data: ' .. err)
+			return
+		end
+		func()
+		local loadedJobs = tempEnv.QBShared and tempEnv.QBShared.Jobs
+		if not loadedJobs or next(loadedJobs) == nil then
+			print('Error: QBShared.Jobs table is missing or empty.')
+			return
+		end
+		validJobs = filterJobs(loadedJobs)
+		-- Request the hardcoded gangs from the qb-core shared file (shared/gangs.lua)
+		local originalData = LoadResourceFile('qb-core', './shared/gangs.lua')
+		local validGangs = {}
+		local function filterGangs(gangs)
+			local validGangs = {}
+			for gangName, gangData in pairs(gangs) do
+				table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
+			end
+			return validGangs
+		end
+		local tempEnv = {}
+		setmetatable(tempEnv, {__index = _G})
+		local func, err = load(originalData, 'gangData', 't', tempEnv)
+		if not func then
+			print('Error loading data: ' .. err)
+			return
+		end
+		func()
+		local loadedGangs = tempEnv.QBShared and tempEnv.QBShared.Gangs
+		if not loadedGangs or next(loadedGangs) == nil then
+			print('Error: QBShared.Gangs table is missing or empty.')
+			return
+		end
+		validGangs = filterGangs(loadedGangs)
 		-- TODO: Add garage support
 		-- Awaiting garage update
 		-- local QBGarages = exports['qb-garages']:getAllGarages()
 		Wait(5000)
 		apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-			gangs = gangTable}
+			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs}
 		-- Disabled for time being, too spammy
 		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 		-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
