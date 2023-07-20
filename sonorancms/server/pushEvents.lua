@@ -630,7 +630,7 @@ CreateThread(function()
 						gradesTable[gradeIndex - 1] = {name = gradeData.name, payment = gradeData.payment}
 					end
 				end
-				validJobs[data.data.id] = {label = data.data.label, grades = gradesTable, defaultDuty = data.data.defaultDuty, offDutyPay = data.data.offDutyPay}
+				validJobs[data.data.id] = {type = data.data.type, label = data.data.label, grades = gradesTable, defaultDuty = data.data.defaultDuty, offDutyPay = data.data.offDutyPay}
 				local function convertToPlainText(jobTable)
 					local lines = {'QBShared = QBShared or {}'}
 					table.insert(lines, 'QBShared.ForceJobDefaultDutyAtLogin = true -- true: Force duty state to jobdefaultDuty | false: set duty state from database last saved')
@@ -640,7 +640,7 @@ CreateThread(function()
 						table.insert(lines, gangLine)
 						local labelLine = '\t\tlabel = ' .. string.format('\'%s\',', jobData.label)
 						table.insert(lines, labelLine)
-						if jobData.type then
+						if jobData.type and jobData.type ~= nil then
 							local typeLine = '\t\ttype = \'' .. jobData.type .. '\','
 							table.insert(lines, typeLine)
 						end
@@ -714,7 +714,7 @@ CreateThread(function()
 						gradesTable[gradeIndex - 1] = {name = gradeData.name, payment = gradeData.payment}
 					end
 				end
-				validJobs[data.data.id] = {label = data.data.label, grades = gradesTable, defaultDuty = data.data.defaultDuty, offDutyPay = data.data.offDutyPay}
+				validJobs[data.data.id] = {type = data.data.type, label = data.data.label, grades = gradesTable, defaultDuty = data.data.defaultDuty, offDutyPay = data.data.offDutyPay}
 				exports['qb-core']:AddJob(data.data.id, {label = data.data.label, grades = gradesTable, defaultDuty = data.data.defaultDuty, offDutyPay = data.data.offDutyPay})
 				local function convertToPlainText(jobTable)
 					local lines = {'QBShared = QBShared or {}'}
@@ -725,7 +725,7 @@ CreateThread(function()
 						table.insert(lines, gangLine)
 						local labelLine = '\t\tlabel = ' .. string.format('\'%s\',', jobData.label)
 						table.insert(lines, labelLine)
-						if jobData.type then
+						if jobData.type and jobData.type ~= nil then
 							local typeLine = '\t\ttype = \'' .. jobData.type .. '\','
 							table.insert(lines, typeLine)
 						end
