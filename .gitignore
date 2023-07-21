@@ -1,7 +1,5 @@
 .luacheckrc
 /sonorancms/config.lua
-yarn.lock
-.yarn.installed
 sonorancms/node_modules/.yarn-integrity
 BACKUP.lua
 sonorancms/apiPayload.json
