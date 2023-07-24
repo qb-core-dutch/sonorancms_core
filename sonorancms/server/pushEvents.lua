@@ -933,7 +933,7 @@ CreateThread(function()
 				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-			SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+			-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
@@ -1123,7 +1123,7 @@ function manuallySendPayload()
 			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
 		-- Disabled for time being, too spammy
 		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-		SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+		-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 		performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 			Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 			if not ok then
