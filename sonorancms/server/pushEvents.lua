@@ -776,12 +776,21 @@ CreateThread(function()
 			MySQL.query('SELECT * FROM players', function(row)
 				for _, v in ipairs(row) do
 					local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
+					local playerInventory = {}
 					v.charinfo = json.decode(v.charinfo)
 					v.job = json.decode(v.job)
 					v.money = json.decode(v.money)
+					v.inventory = json.decode(v.inventory)
+					for _, item in pairs(v.inventory) do
+						table.insert(playerInventory,
+						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+					end
 					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 						id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
-						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+						money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone,
+						inventory = playerInventory}
 					if qbCharInfo then
 						charInfo.offline = false
 						charInfo.source = qbCharInfo.PlayerData.source
@@ -857,6 +866,7 @@ CreateThread(function()
 						if j.isboss then
 							jobData.grades[h].isBoss = j.isboss
 						end
+						j.isboss = nil
 					end
 					table.insert(validJobs, {id = jobName, label = jobData.label, grades = jobData.grades, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay})
 				end
@@ -886,6 +896,7 @@ CreateThread(function()
 						if j.isboss then
 							gangData.grades[h].isBoss = j.isboss
 						end
+						j.isboss = nil
 					end
 					table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
 				end
@@ -905,16 +916,24 @@ CreateThread(function()
 				return
 			end
 			validGangs = filterGangs(loadedGangs)
-			-- TODO: Add garage support
-			-- Awaiting garage update
-			-- local QBGarages = exports['qb-garages']:getAllGarages()
+			-- Request the garage data from qb-garages
+			local QBGarages = exports['qb-garages']:getAllGarages()
+			-- Request all items from QBShared
+			local QBItems = QBCore.Shared.Items
+			local formattedQBItems = {}
+			for _, v in pairs(QBItems) do
+				local item = {name = v.name, label = v.label or 'Unknown', weight = v.weight or 0, type = v.type, image = v.image or '', description = v.description or '', unique = v.unique or false,
+					useable = v.useable or false, ammoType = v.ammoType or nil, shouldClose = v.shouldClose or false,
+					combinable = v.combinable and {accept = v.combinable.accept, reward = v.combinable.reward, anim = v.combinable.anim} or nil}
+				table.insert(formattedQBItems, item)
+			end
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs}
+				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-			-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+			SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
@@ -947,12 +966,21 @@ function manuallySendPayload()
 		MySQL.query('SELECT * FROM players', function(row)
 			for _, v in ipairs(row) do
 				local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
+				local playerInventory = {}
 				v.charinfo = json.decode(v.charinfo)
 				v.job = json.decode(v.job)
 				v.money = json.decode(v.money)
+				v.inventory = json.decode(v.inventory)
+				for _, item in pairs(v.inventory) do
+					table.insert(playerInventory,
+					             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+						unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+						combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+				end
 				local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 					id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
-					money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone}
+					money = {bank = v.money.bank, cash = v.money.cash, crypto = v.money.crypto}, gender = v.charinfo.gender, nationality = v.charinfo.nationality, phoneNumber = v.charinfo.phone,
+					inventory = playerInventory}
 				if qbCharInfo then
 					charInfo.offline = false
 					charInfo.source = qbCharInfo.PlayerData.source
@@ -1005,7 +1033,7 @@ function manuallySendPayload()
 		for i, v in pairs(QBCore.Shared.Jobs) do
 			local gradesTable = {}
 			for h, g in pairs(v.grades) do
-				gradesTable[h] = {name = g.name, payment = g.payment}
+				gradesTable[h] = {name = g.name, payment = g.payment, isBoss = g.isboss}
 			end
 			table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 		end
@@ -1024,6 +1052,12 @@ function manuallySendPayload()
 		local function filterJobs(jobs)
 			local validJobs = {}
 			for jobName, jobData in pairs(jobs) do
+				for h, j in pairs(jobData.grades) do
+					if j.isboss then
+						jobData.grades[h].isBoss = j.isboss
+					end
+					j.isboss = nil
+				end
 				table.insert(validJobs, {id = jobName, label = jobData.label, grades = jobData.grades, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay})
 			end
 			return validJobs
@@ -1048,6 +1082,12 @@ function manuallySendPayload()
 		local function filterGangs(gangs)
 			local validGangs = {}
 			for gangName, gangData in pairs(gangs) do
+				for h, j in pairs(gangData.grades) do
+					if j.isboss then
+						gangData.grades[h].isBoss = j.isboss
+					end
+					j.isboss = nil
+				end
 				table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
 			end
 			return validGangs
@@ -1066,16 +1106,24 @@ function manuallySendPayload()
 			return
 		end
 		validGangs = filterGangs(loadedGangs)
-		-- TODO: Add garage support
-		-- Awaiting garage update
-		-- local QBGarages = exports['qb-garages']:getAllGarages()
+		-- Request the garage data from qb-garages
+		local QBGarages = exports['qb-garages']:getAllGarages()
+		-- Request all items from QBShared
+		local QBItems = QBCore.Shared.Items
+		local formattedQBItems = {}
+		for _, v in pairs(QBItems) do
+			local item = {name = v.name, label = v.label or 'Unknown', weight = v.weight or 0, type = v.type, image = v.image or '', description = v.description or '', unique = v.unique or false,
+				useable = v.useable or false, ammoType = v.ammoType or nil, shouldClose = v.shouldClose or false,
+				combinable = v.combinable and {accept = v.combinable.accept, reward = v.combinable.reward, anim = v.combinable.anim} or nil}
+			table.insert(formattedQBItems, item)
+		end
 		Wait(5000)
 		apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs}
+			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
 		-- Disabled for time being, too spammy
 		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-		-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+		SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 		performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 			Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 			if not ok then
@@ -1085,6 +1133,7 @@ function manuallySendPayload()
 			end
 		end)
 	end
+	Wait(60000)
 end
 
 RegisterConsoleListener(function(channel, message)
