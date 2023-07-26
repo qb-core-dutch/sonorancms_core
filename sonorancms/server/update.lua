@@ -70,12 +70,12 @@ function CopyFile(old_path, new_path)
 end
 
 AddEventHandler(GetCurrentResourceName() .. '::CheckConfig', function()
-	if not FileExists(GetResourcePath(GetCurrentResourceName()) .. '/config/config.lua') then
-		CopyFile(GetResourcePath(GetCurrentResourceName()) .. '/config/config.CHANGEME.lua', GetResourcePath(GetCurrentResourceName()) .. '/config/config.lua')
+	if not FileExists(GetResourcePath(GetCurrentResourceName()) .. '/config.lua') then
+		CopyFile(GetResourcePath(GetCurrentResourceName()) .. '/config.CHANGEME.lua', GetResourcePath(GetCurrentResourceName()) .. '/config.lua')
 		local c = assert(io.open(GetResourcePath(helper_name) .. '/config.lock', 'w+'))
 		c:write('core')
 		c:close()
-		local cc = assert(io.open(GetResourcePath(GetCurrentResourceName()) .. '/config/config.lua', 'a'))
+		local cc = assert(io.open(GetResourcePath(GetCurrentResourceName()) .. '/config.lua', 'a'))
 		cc:write('\n\n-- Remove this after configuring\nconfig.auto_config = true')
 		cc:close()
 		ExecuteCommand('ensure ' .. helper_name)

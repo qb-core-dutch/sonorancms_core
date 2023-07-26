@@ -29,6 +29,31 @@ local function isInvalid(property, invalidType)
 	return (property == nil or property == invalidType)
 end
 
+--- Removes any quotes to ensure functionality
+---@param inputString string
+---@return string
+local function escapeQuotes(inputString)
+	return inputString:gsub('[\'"]', '\\%0')
+end
+
+--- Encodes the combinale array for items to be correct
+---@param combinableData table
+---@return string
+local function encodeCombinable(combinableData)
+	local acceptArray = {}
+	for _, acceptItem in ipairs(combinableData.accept) do
+		table.insert(acceptArray, '"' .. acceptItem .. '"')
+	end
+	local anim = combinableData.anim
+	local animString = ''
+	if anim then
+		animString = string.format(', anim = {text = "%s", dict = "%s", timeOut = %d, lib = "%s"}', anim.text, anim.dict, anim.timeOut, anim.lib)
+	end
+
+	local combinableLine = string.format('{accept = {%s}, reward = "%s"%s},', table.concat(acceptArray, ','), combinableData.reward, animString)
+	return combinableLine
+end
+
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -750,6 +775,301 @@ CreateThread(function()
 			end
 		end
 	end)
+	-- Adding Items to QBCore
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_ADD_ITEM_CONFIG', function(data)
+		if data ~= nil then
+			QBCore = exports['qb-core']:GetCoreObject()
+			local item = {name = data.data.name, label = data.data.label, weight = data.data.weight or 0, type = data.data.type, image = data.data.image or '', description = data.data.description or '',
+				unique = data.data.unique or false, useable = data.data.useable or false, ammoType = data.data.ammoType or nil, shouldClose = data.data.shouldClose or false,
+				combinable = data.data.combinable or nil}
+			QBCore.Functions.AddItem(item.name, item)
+			local originalData = LoadResourceFile('qb-core', './shared/items.lua')
+			local validItems = {}
+			local function filterJobs(items)
+				local validItems = {}
+				for itemName, itemData in pairs(items) do
+					validItems[itemName] = itemData
+				end
+				return validItems
+			end
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'itemData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedItems = tempEnv.QBShared and tempEnv.QBShared.Items
+			if not loadedItems or next(loadedItems) == nil then
+				print('Error: QBShared.Items table is missing or empty.')
+				return
+			end
+			validItems = filterJobs(loadedItems)
+			if validItems[data.data.name] then
+				debugLog('Error: Item ' .. data.data.name .. ' already exist.')
+				return
+			else
+				validItems[data.data.name] = {name = data.data.name, label = data.data.label, weight = data.data.weight or 0, type = data.data.type, image = data.data.image or '',
+					description = data.data.description or '', unique = data.data.unique or false, useable = data.data.useable or false, ammoType = data.data.ammoType or nil,
+					shouldClose = data.data.shouldClose or false, combinable = data.data.combinable or nil}
+				local function convertToPlainText(itemTable)
+					local lines = {'QBShared = QBShared or {}'}
+					table.insert(lines, 'QBShared.Items = {')
+					for itemName, itemData in pairs(itemTable) do
+						local itemLine = '\t[\'' .. itemName .. '\'] = {'
+						table.insert(lines, itemLine)
+						local labelLine = '\t\tlabel = ' .. string.format('\'%s\',', itemData.label)
+						table.insert(lines, labelLine)
+						if itemData.type and itemData.type ~= nil then
+							local typeLine = '\t\ttype = \'' .. itemData.type .. '\','
+							table.insert(lines, typeLine)
+						end
+						if itemData.weight ~= nil then
+							local weightLine = '\t\tweight = ' .. tostring(itemData.weight) .. ','
+							table.insert(lines, weightLine)
+						end
+						if itemData.image and itemData.image ~= '' then
+							local imageLine = '\t\timage = \'' .. itemData.image .. '\','
+							table.insert(lines, imageLine)
+						end
+						if itemData.description and itemData.description ~= '' then
+							local descLine = '\t\tdescription = \'' .. escapeQuotes(itemData.description) .. '\','
+							table.insert(lines, descLine)
+						end
+						if itemData.unique ~= nil then
+							local uniqueLine = '\t\tunique = ' .. tostring(itemData.unique) .. ','
+							table.insert(lines, uniqueLine)
+						end
+						if itemData.useable ~= nil then
+							local useableLine = '\t\tuseable = ' .. tostring(itemData.useable) .. ','
+							table.insert(lines, useableLine)
+						end
+						if itemData.ammoType ~= nil then
+							local ammoTypeLine = '\t\tammoType = \'' .. itemData.ammoType .. '\','
+							table.insert(lines, ammoTypeLine)
+						end
+						if itemData.shouldClose ~= nil then
+							local shouldCloseLine = '\t\tshouldClose = ' .. tostring(itemData.shouldClose) .. ','
+							table.insert(lines, shouldCloseLine)
+						end
+						if itemData.combinable ~= nil then
+							local combinableLine = '\t\tcombinable = ' .. encodeCombinable(itemData.combinable) .. ''
+							table.insert(lines, combinableLine)
+						end
+						table.insert(lines, '\t},')
+					end
+					table.insert(lines, '}')
+					return table.concat(lines, '\n')
+				end
+				local modifiedData = convertToPlainText(validItems)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				SaveResourceFile('qb-core', './shared/items.lua', modifiedData, -1)
+				manuallySendPayload()
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' adding item ' .. data.data.name)
+			end
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_EDIT_ITEM_CONFIG', function(data)
+		if data ~= nil then
+			local originalData = LoadResourceFile('qb-core', './shared/items.lua')
+			local validItems = {}
+			local function filterJobs(items)
+				local validItems = {}
+				for itemName, itemData in pairs(items) do
+					validItems[itemName] = itemData
+				end
+				return validItems
+			end
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'itemData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedItems = tempEnv.QBShared and tempEnv.QBShared.Items
+			if not loadedItems or next(loadedItems) == nil then
+				print('Error: QBShared.Items table is missing or empty.')
+				return
+			end
+			validItems = filterJobs(loadedItems)
+			if not validItems[data.data.name] then
+				debugLog('Error: Item ' .. data.data.name .. ' does not exist.')
+				return
+			else
+				validItems[data.data.name] = {name = data.data.name, label = data.data.label, weight = data.data.weight or 0, type = data.data.type, image = data.data.image or '',
+					description = data.data.description or '', unique = data.data.unique or false, useable = data.data.useable or false, ammoType = data.data.ammoType or nil,
+					shouldClose = data.data.shouldClose or false, combinable = data.data.combinable or nil}
+				local function convertToPlainText(itemTable)
+					local lines = {'QBShared = QBShared or {}'}
+					table.insert(lines, 'QBShared.Items = {')
+					for itemName, itemData in pairs(itemTable) do
+						local itemLine = '\t[\'' .. itemName .. '\'] = {'
+						table.insert(lines, itemLine)
+						local labelLine = '\t\tlabel = ' .. string.format('\'%s\',', itemData.label)
+						table.insert(lines, labelLine)
+						if itemData.type and itemData.type ~= nil then
+							local typeLine = '\t\ttype = \'' .. itemData.type .. '\','
+							table.insert(lines, typeLine)
+						end
+						if itemData.weight ~= nil then
+							local weightLine = '\t\tweight = ' .. tostring(itemData.weight) .. ','
+							table.insert(lines, weightLine)
+						end
+						if itemData.image and itemData.image ~= '' then
+							local imageLine = '\t\timage = \'' .. itemData.image .. '\','
+							table.insert(lines, imageLine)
+						end
+						if itemData.description and itemData.description ~= '' then
+							local descLine = '\t\tdescription = \'' .. escapeQuotes(itemData.description) .. '\','
+							table.insert(lines, descLine)
+						end
+						if itemData.unique ~= nil then
+							local uniqueLine = '\t\tunique = ' .. tostring(itemData.unique) .. ','
+							table.insert(lines, uniqueLine)
+						end
+						if itemData.useable ~= nil then
+							local useableLine = '\t\tuseable = ' .. tostring(itemData.useable) .. ','
+							table.insert(lines, useableLine)
+						end
+						if itemData.ammoType ~= nil then
+							local ammoTypeLine = '\t\tammoType = \'' .. itemData.ammoType .. '\','
+							table.insert(lines, ammoTypeLine)
+						end
+						if itemData.shouldClose ~= nil then
+							local shouldCloseLine = '\t\tshouldClose = ' .. tostring(itemData.shouldClose) .. ','
+							table.insert(lines, shouldCloseLine)
+						end
+						if itemData.combinable ~= nil then
+							local combinableLine = '\t\tcombinable = ' .. encodeCombinable(itemData.combinable) .. ''
+							table.insert(lines, combinableLine)
+						end
+						table.insert(lines, '\t},')
+					end
+					table.insert(lines, '}')
+					return table.concat(lines, '\n')
+				end
+				local modifiedData = convertToPlainText(validItems)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				SaveResourceFile('qb-core', './shared/items.lua', modifiedData, -1)
+				manuallySendPayload()
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing item ' .. data.data.name)
+			end
+		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_REMOVE_ITEM_CONFIG', function(data)
+		if data ~= nil then
+			local originalData = LoadResourceFile('qb-core', './shared/items.lua')
+			local validItems = {}
+			local function filterJobs(items)
+				local validItems = {}
+				for itemName, itemData in pairs(items) do
+					validItems[itemName] = itemData
+				end
+				return validItems
+			end
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'itemData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedItems = tempEnv.QBShared and tempEnv.QBShared.Items
+			if not loadedItems or next(loadedItems) == nil then
+				print('Error: QBShared.Items table is missing or empty.')
+				return
+			end
+			validItems = filterJobs(loadedItems)
+			if not validItems[data.data.itemName] then
+				debugLog('Error: Item ' .. data.data.itemName .. ' does not exist.')
+				return
+			else
+				validItems[data.data.itemName] = nil
+				local function convertToPlainText(itemTable)
+					local lines = {'QBShared = QBShared or {}'}
+					table.insert(lines, 'QBShared.Items = {')
+					for itemName, itemData in pairs(itemTable) do
+						local itemLine = '\t[\'' .. itemName .. '\'] = {'
+						table.insert(lines, itemLine)
+						local labelLine = '\t\tlabel = ' .. string.format('\'%s\',', itemData.label)
+						table.insert(lines, labelLine)
+						if itemData.type and itemData.type ~= nil then
+							local typeLine = '\t\ttype = \'' .. itemData.type .. '\','
+							table.insert(lines, typeLine)
+						end
+						if itemData.weight ~= nil then
+							local weightLine = '\t\tweight = ' .. tostring(itemData.weight) .. ','
+							table.insert(lines, weightLine)
+						end
+						if itemData.image and itemData.image ~= '' then
+							local imageLine = '\t\timage = \'' .. itemData.image .. '\','
+							table.insert(lines, imageLine)
+						end
+						if itemData.description and itemData.description ~= '' then
+							local descLine = '\t\tdescription = \'' .. escapeQuotes(itemData.description) .. '\','
+							table.insert(lines, descLine)
+						end
+						if itemData.unique ~= nil then
+							local uniqueLine = '\t\tunique = ' .. tostring(itemData.unique) .. ','
+							table.insert(lines, uniqueLine)
+						end
+						if itemData.useable ~= nil then
+							local useableLine = '\t\tuseable = ' .. tostring(itemData.useable) .. ','
+							table.insert(lines, useableLine)
+						end
+						if itemData.ammoType ~= nil then
+							local ammoTypeLine = '\t\tammoType = \'' .. itemData.ammoType .. '\','
+							table.insert(lines, ammoTypeLine)
+						end
+						if itemData.shouldClose ~= nil then
+							local shouldCloseLine = '\t\tshouldClose = ' .. tostring(itemData.shouldClose) .. ','
+							table.insert(lines, shouldCloseLine)
+						end
+						if itemData.combinable ~= nil then
+							local combinableLine = '\t\tcombinable = ' .. encodeCombinable(itemData.combinable) .. ''
+							table.insert(lines, combinableLine)
+						end
+						table.insert(lines, '\t},')
+					end
+					table.insert(lines, '}')
+					return table.concat(lines, '\n')
+				end
+				local modifiedData = convertToPlainText(validItems)
+				-- Too spammy
+				-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Saving jobs.lua with new data: ' .. modifiedData)
+				SaveResourceFile('qb-core', './shared/items.lua', modifiedData, -1)
+				manuallySendPayload()
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' removed item ' .. data.data.itemName)
+			end
+		end
+	end)
+	-- Editng a characters inventory
+	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_SET_CHAR_INVENTORY', function(data)
+		if data ~= nil then
+			local QBCore = exports['qb-core']:GetCoreObject()
+			MySQL.query('SELECT * FROM `players` WHERE `citizenid` = ? LIMIT 1', {data.data.citizenId}, function(row)
+				if not row then
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId .. ' but no player found.')
+				else
+					local DBInventory = json.decode(row.inventory)
+					DBInventory = data.data.slots or {}
+					local player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
+					if player then
+						player.Functions.SetInventory(DBInventory)
+					else
+						MySQL.query('UPDATE players SET inventory = ? WHERE citizenid = ?', {json.encode(DBInventory), data.data.citizenId})
+					end
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId)
+				end
+			end)
+		end
+	end)
 end)
 
 CreateThread(function()
@@ -773,7 +1093,7 @@ CreateThread(function()
 			QBCore = exports['qb-core']:GetCoreObject()
 			-- Query the DB for QB Players rather than using the function because the function only returns active ones
 			local qbCharacters = {}
-			MySQL.query('SELECT * FROM players', function(row)
+			MySQL.query('SELECT * FROM `players`', function(row)
 				for _, v in ipairs(row) do
 					local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
 					local playerInventory = {}
@@ -782,6 +1102,7 @@ CreateThread(function()
 					v.money = json.decode(v.money)
 					v.inventory = json.decode(v.inventory)
 					for _, item in pairs(v.inventory) do
+						item = QBCore.Shared.Items[item.name]
 						table.insert(playerInventory,
 						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
 							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
@@ -927,13 +1248,40 @@ CreateThread(function()
 					combinable = v.combinable and {accept = v.combinable.accept, reward = v.combinable.reward, anim = v.combinable.anim} or nil}
 				table.insert(formattedQBItems, item)
 			end
+			-- Request the hardcoded items from the qb-core shared file (shared/items.lua)
+			local originalData = LoadResourceFile('qb-core', './shared/items.lua')
+			local validItems = {}
+
+			local function filterItems(items)
+				local validItems = {}
+				for itemName, itemData in pairs(items) do
+					table.insert(validItems, {name = itemName, label = itemData.label, weight = itemData.weight or 0, type = itemData.type, image = itemData.image or '', description = itemData.description or '',
+						unique = itemData.unique or false, useable = itemData.useable or false, ammoType = itemData.ammoType or nil, shouldClose = itemData.shouldClose or false, combinable = itemData.combinable or nil})
+				end
+				return validItems
+			end
+
+			local tempEnv = {}
+			setmetatable(tempEnv, {__index = _G})
+			local func, err = load(originalData, 'itemData', 't', tempEnv)
+			if not func then
+				print('Error loading data: ' .. err)
+				return
+			end
+			func()
+			local loadedItems = tempEnv.QBShared and tempEnv.QBShared.Items
+			if not loadedItems or next(loadedItems) == nil then
+				print('Error: QBShared.Items table is missing or empty.')
+				return
+			end
+			validItems = filterItems(loadedItems)
 			Wait(5000)
 			apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 				players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
+				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, fileItems = validItems, garages = QBGarages, config = {slotCount = Config.MaxInventorySlots}}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-			-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+			SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
@@ -1117,10 +1465,37 @@ function manuallySendPayload()
 				combinable = v.combinable and {accept = v.combinable.accept, reward = v.combinable.reward, anim = v.combinable.anim} or nil}
 			table.insert(formattedQBItems, item)
 		end
+		-- Request the hardcoded items from the qb-core shared file (shared/items.lua)
+		local originalData = LoadResourceFile('qb-core', './shared/items.lua')
+		local validItems = {}
+
+		local function filterItems(items)
+			local validItems = {}
+			for itemName, itemData in pairs(items) do
+				table.insert(validItems, {name = itemName, label = itemData.label, weight = itemData.weight or 0, type = itemData.type, image = itemData.image or '', description = itemData.description or '',
+					unique = itemData.unique or false, useable = itemData.useable or false, ammoType = itemData.ammoType or nil, shouldClose = itemData.shouldClose or false, combinable = itemData.combinable or nil})
+			end
+			return validItems
+		end
+
+		local tempEnv = {}
+		setmetatable(tempEnv, {__index = _G})
+		local func, err = load(originalData, 'itemData', 't', tempEnv)
+		if not func then
+			print('Error loading data: ' .. err)
+			return
+		end
+		func()
+		local loadedItems = tempEnv.validItems and tempEnv.validItems.Items
+		if not loadedItems or next(loadedItems) == nil then
+			print('Error: validItems.Items table is missing or empty.')
+			return
+		end
+		validItems = filterItems(loadedItems)
 		Wait(5000)
 		apiResponse = {uptime = GetGameTimer(), system = {cpuRaw = systemInfo.cpuRaw, cpuUsage = systemInfo.cpuUsage, memoryRaw = systemInfo.ramRaw, memoryUsage = systemInfo.ramUsage},
 			players = activePlayers, characters = qbCharacters, gameVehicles = vehicleGamePool, logs = loggerBuffer, resources = resourceList, characterVehicles = characterVehicles, jobs = jobTable,
-			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, garages = QBGarages}
+			gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, fileItems = validItems, garages = QBGarages, config = {slotCount = Config.MaxInventorySlots}}
 		-- Disabled for time being, too spammy
 		-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
 		-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
@@ -1133,7 +1508,6 @@ function manuallySendPayload()
 			end
 		end)
 	end
-	Wait(60000)
 end
 
 RegisterConsoleListener(function(channel, message)
