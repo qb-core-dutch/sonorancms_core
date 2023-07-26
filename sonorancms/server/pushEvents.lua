@@ -1,6 +1,4 @@
 local vehicleGamePool = {}
-local sub = string.sub
-local ostime = os.time
 local tonumber = tonumber
 local loggerBuffer = {}
 local explosionTypes = {'GRENADE', 'GRENADELAUNCHER', 'STICKYBOMB', 'MOLOTOV', 'ROCKET', 'TANKSHELL', 'HI_OCTANE', 'CAR', 'PLANE', 'PETROL_PUMP', 'BIKE', 'DIR_STEAM', 'DIR_FLAME', 'DIR_WATER_HYDRANT',
@@ -85,7 +83,7 @@ CreateThread(function()
 				local PlayerData = row
 				local PlayerDataMoney = json.decode(PlayerData.money)
 				local validType = false
-				for k, v in pairs(PlayerDataMoney) do
+				for k, _ in pairs(PlayerDataMoney) do
 					if k == data.data.moneyType then
 						PlayerDataMoney[k] = data.data.amount
 						validType = true
@@ -1069,6 +1067,9 @@ CreateThread(function()
 				end
 			end)
 		end
+	end)
+	TriggerEvent('sonorancms::RegisterPushEvent', 'UPLOAD_ITEM_IMAGE', function(data)
+		print(json.encode(data))
 	end)
 end)
 

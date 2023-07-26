@@ -1,3 +1,6 @@
+--- Image host for SonoranCMS
+--- This is a simple image host for SonoranCMS. It is not required to run the CMS, but is required for the item image feature.
+
 SetHttpHandler(function(req, res)
     local path = req.path:gsub("/proxy.*", "")
     local method = req.method
