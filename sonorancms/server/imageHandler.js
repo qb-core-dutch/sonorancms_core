@@ -7,6 +7,7 @@ const { formidable } = require('formidable');
 const savePath = GetResourcePath('qb-inventory') + '/html/images'
 const configFilePath = GetResourcePath(GetCurrentResourceName()) + '/config.lua';
 const luaCode = fs.readFileSync(configFilePath, 'utf8');
+const sizeOf = require('image-size');
 let APIKey = '';
 let port = 3000;
 
@@ -50,7 +51,28 @@ const server = http.createServer((req, res) => {
             if (fields.type[0] === 'UPLOAD_ITEM_IMAGE') {
                 if (String(fields.key) !== String(APIKey)) {
                     res.writeHead(403, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Invalid API key' }));
+                    res.end(JSON.strÏÏingify({ error: 'Invalid API key' }));
+                    return;
+                }
+                if (!files.file) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'No file provided' }));
+                    return;
+                }
+                if (!files.file[0].originalFilename) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'No file provided' }));
+                    return;
+                }
+                if (!files.file[0].originalFilename.endsWith('.png')) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid file type' }));
+                    return;
+                }
+                const imageSize = sizeOf(files.file[0].filepath);
+                if (imageSize.width !== 100 || imageSize.height !== 100) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid image size' }));
                     return;
                 }
                 const file = files.file[0]; // Access the first file object in the array
