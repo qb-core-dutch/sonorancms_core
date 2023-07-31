@@ -170,32 +170,32 @@ CreateThread(function()
 				local PlayerData = row
 				PlayerData.charinfo = json.decode(PlayerData.charinfo)
 				if data.data.charInfo.firstName and data.data.charInfo.firstName ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting first name to ' .. data.data.charInfo.firstName)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting first name to ' .. data.data.charInfo.firstName)
 					PlayerData.charinfo.firstname = data.data.charInfo.firstName
 				end
 				if data.data.charInfo.lastName and data.data.charInfo.lastName ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting last name to ' .. data.data.charInfo.lastName)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting last name to ' .. data.data.charInfo.lastName)
 					PlayerData.charinfo.lastname = data.data.charInfo.lastName
 				end
 				if data.data.charInfo.birthDate and data.data.charInfo.birthDate ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting birth date to ' .. data.data.charInfo.birthDate)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting birth date to ' .. data.data.charInfo.birthDate)
 					PlayerData.charinfo.birthdate = data.data.charInfo.birthDate
 				end
 				if data.data.charInfo.gender and data.data.charInfo.gender ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting gender to ' .. data.data.charInfo.gender)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting gender to ' .. data.data.charInfo.gender)
 					PlayerData.charinfo.gender = data.data.charInfo.gender
 				end
 				if data.data.charInfo.nationality and data.data.charInfo.nationality ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting nationality to ' .. data.data.charInfo.nationality)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting nationality to ' .. data.data.charInfo.nationality)
 					PlayerData.charinfo.nationality = data.data.charInfo.nationality
 				end
 				if data.data.charInfo.phoneNumber and data.data.charInfo.phoneNumber ~= '' then
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Setting phone number to ' .. data.data.charInfo.phoneNumber)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Setting phone number to ' .. data.data.charInfo.phoneNumber)
 					PlayerData.charinfo.phone = data.data.charInfo.phoneNumber
 				end
 				local NewCharInfo = json.encode(PlayerData.charinfo)
 				MySQL.update('UPDATE players SET charinfo = ? WHERE citizenid = ?', {NewCharInfo, PlayerData.citizenid}, function(affectedRows)
-					TriggerEvent('SonoranCMS::core:writeLog', 'debug','Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Updated charinfo for ' .. PlayerData.name .. ' to ' .. NewCharInfo .. ' with ' .. affectedRows .. ' rows affected')
 				end)
 				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
 				manuallySendPayload()
@@ -250,7 +250,7 @@ CreateThread(function()
 									'UPDATE player_vehicles SET plate = ?, garage = ?, fuel = ?, engine = ?, body = ?, state = ?, drivingdistance = ?, balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE id = ?',
 									{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.drivingdistance, vehData.balance, vehData.paymentamount, vehData.financetime,
 										data.data.vehicleId}, function(affectedRows)
-										TriggerEvent('SonoranCMS::core:writeLog', 'debug','Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. json.encode(vehData) .. ' with ' .. affectedRows .. ' rows affected')
+										TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. json.encode(vehData) .. ' with ' .. affectedRows .. ' rows affected')
 									end)
 					manuallySendPayload()
 				end
@@ -268,7 +268,7 @@ CreateThread(function()
 					PlayerData.charinfo = json.decode(PlayerData.charinfo)
 					MySQL.insert('INSERT INTO player_vehicles (citizenid, garage, vehicle, plate, state) VALUES (?, ?, ?, ?, ?)',
 					             {PlayerData.citizenid, data.data.garage, data.data.model, data.data.plate, data.data.state}, function(affectedRows)
-						TriggerEvent('SonoranCMS::core:writeLog', 'debug','Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
+						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Added vehicle metadata for ' .. PlayerData.name .. ' to ' .. vehData .. ' with ' .. affectedRows .. ' rows affected')
 					end)
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' saving player ' .. PlayerData.name)
 					manuallySendPayload()
@@ -286,7 +286,7 @@ CreateThread(function()
 					return
 				else
 					MySQL.update('UPDATE player_vehicles SET citizenid = ? WHERE id = ?', {data.data.newCitizenId, data.data.vehicleId}, function(affectedRows)
-						TriggerEvent('SonoranCMS::core:writeLog', 'debug','Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.newCitizenId .. ' with ' .. affectedRows .. ' rows affected')
+						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Updated vehicle owner for ' .. data.data.vehicleId .. ' to ' .. data.data.newCitizenId .. ' with ' .. affectedRows .. ' rows affected')
 					end)
 					manuallySendPayload()
 				end
@@ -301,7 +301,7 @@ CreateThread(function()
 					return
 				else
 					MySQL.update('UPDATE player_vehicles SET engine = ?, body = ? WHERE id = ?', {1000, 1000, data.data.vehicleId}, function(affectedRows)
-						TriggerEvent('SonoranCMS::core:writeLog', 'debug','Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
+						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Updated vehicle health for ' .. data.data.vehicleId .. ' to 1000 with ' .. affectedRows .. ' rows affected')
 					end)
 					manuallySendPayload()
 				end
@@ -349,7 +349,7 @@ CreateThread(function()
 			end
 			validGangs = filterGangs(loadedGangs)
 			if not validGangs[data.data.gangId] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Gang ' .. data.data.gangId .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Gang ' .. data.data.gangId .. ' does not exist.')
 				return
 			else
 				validGangs[data.data.gangId] = nil
@@ -412,7 +412,7 @@ CreateThread(function()
 			end
 			validGangs = filterGangs(loadedGangs)
 			if not validGangs[data.data.id] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Gang ' .. data.data.id .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Gang ' .. data.data.id .. ' does not exist.')
 				return
 			else
 				local gradesTable = {}
@@ -483,7 +483,7 @@ CreateThread(function()
 			end
 			validGangs = filterGangs(loadedGangs)
 			if validGangs[data.data.id] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Gang ' .. data.data.id .. ' already exists.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Gang ' .. data.data.id .. ' already exists.')
 				return
 			else
 				local gradesTable = {}
@@ -555,7 +555,7 @@ CreateThread(function()
 			end
 			validJobs = filterJobs(loadedJobs)
 			if not validJobs[data.data.jobId] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Job ' .. data.data.jobId .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Job ' .. data.data.jobId .. ' does not exist.')
 				return
 			else
 				validJobs[data.data.jobId] = nil
@@ -631,7 +631,7 @@ CreateThread(function()
 			end
 			validJobs = filterJobs(loadedJobs)
 			if not validJobs[data.data.id] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Job ' .. data.data.id .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Job ' .. data.data.id .. ' does not exist.')
 				return
 			else
 				local gradesTable = {}
@@ -715,7 +715,7 @@ CreateThread(function()
 			end
 			validJobs = filterJobs(loadedJobs)
 			if validJobs[data.data.id] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Job ' .. data.data.id .. ' already exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Job ' .. data.data.id .. ' already exist.')
 				return
 			else
 				local gradesTable = {}
@@ -806,7 +806,7 @@ CreateThread(function()
 			end
 			validItems = filterJobs(loadedItems)
 			if validItems[data.data.name] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Item ' .. data.data.name .. ' already exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. data.data.name .. ' already exist.')
 				return
 			else
 				validItems[data.data.name] = {name = data.data.name, label = data.data.label, weight = data.data.weight or 0, type = data.data.type, image = data.data.image or '',
@@ -896,7 +896,7 @@ CreateThread(function()
 			end
 			validItems = filterJobs(loadedItems)
 			if not validItems[data.data.name] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Item ' .. data.data.name .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. data.data.name .. ' does not exist.')
 				return
 			else
 				validItems[data.data.name] = {name = data.data.name, label = data.data.label, weight = data.data.weight or 0, type = data.data.type, image = data.data.image or '',
@@ -986,7 +986,7 @@ CreateThread(function()
 			end
 			validItems = filterJobs(loadedItems)
 			if not validItems[data.data.itemName] then
-				TriggerEvent('SonoranCMS::core:writeLog', 'debug','Error: Item ' .. data.data.itemName .. ' does not exist.')
+				TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. data.data.itemName .. ' does not exist.')
 				return
 			else
 				validItems[data.data.itemName] = nil
@@ -1283,7 +1283,7 @@ CreateThread(function()
 				gangs = gangTable, fileJobs = validJobs, fileGangs = validGangs, items = formattedQBItems, fileItems = validItems, garages = QBGarages, config = {slotCount = Config.MaxInventorySlots}}
 			-- Disabled for time being, too spammy
 			-- TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Sending API update for GAMESTATE, payload: ' .. json.encode(apiResponse))
-			SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
+			-- SaveResourceFile(GetCurrentResourceName(), './apiPayload.json', json.encode(apiResponse), -1)
 			performApiRequest(apiResponse, 'GAMESTATE', function(result, ok)
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
@@ -1313,7 +1313,7 @@ function manuallySendPayload()
 		QBCore = exports['qb-core']:GetCoreObject()
 		-- Query the DB for QB Players rather than using the function because the function only returns active ones
 		local qbCharacters = {}
-		MySQL.query('SELECT * FROM players', function(row)
+		MySQL.query('SELECT * FROM `players`', function(row)
 			for _, v in ipairs(row) do
 				local qbCharInfo = QBCore.Functions.GetPlayerByCitizenId(v.citizenid)
 				local playerInventory = {}
@@ -1322,6 +1322,7 @@ function manuallySendPayload()
 				v.money = json.decode(v.money)
 				v.inventory = json.decode(v.inventory)
 				for _, item in pairs(v.inventory) do
+					item = QBCore.Shared.Items[item.name]
 					table.insert(playerInventory,
 					             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
 						unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
@@ -1408,7 +1409,7 @@ function manuallySendPayload()
 					end
 					j.isboss = nil
 				end
-				table.insert(validJobs, {id = jobName, label = jobData.label, grades = jobData.grades, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay})
+				table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = jobData.grades})
 			end
 			return validJobs
 		end
@@ -1488,9 +1489,9 @@ function manuallySendPayload()
 			return
 		end
 		func()
-		local loadedItems = tempEnv.validItems and tempEnv.validItems.Items
+		local loadedItems = tempEnv.QBShared and tempEnv.QBShared.Items
 		if not loadedItems or next(loadedItems) == nil then
-			print('Error: validItems.Items table is missing or empty.')
+			print('Error: QBShared.Items table is missing or empty.')
 			return
 		end
 		validItems = filterItems(loadedItems)
