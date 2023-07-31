@@ -1103,10 +1103,11 @@ CreateThread(function()
 					v.job = json.decode(v.job)
 					v.money = json.decode(v.money)
 					v.inventory = json.decode(v.inventory)
-					for _, item in pairs(v.inventory) do
+					for slot, item in pairs(v.inventory) do
+						slot = tonumber(slot) - 1
 						item = QBCore.Shared.Items[item.name]
 						table.insert(playerInventory,
-						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+						             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
 							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
 							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
 					end
@@ -1165,8 +1166,8 @@ CreateThread(function()
 			local jobTable = {}
 			for i, v in pairs(QBCore.Shared.Jobs) do
 				local gradesTable = {}
-				for h, g in pairs(v.grades) do
-					gradesTable[h] = {name = g.name, payment = g.payment, isBoss = g.isboss}
+				for _, g in pairs(v.grades) do
+					gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
 				table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 			end
@@ -1174,8 +1175,8 @@ CreateThread(function()
 			local gangTable = {}
 			for i, v in pairs(QBCore.Shared.Gangs) do
 				local gradesTable = {}
-				for h, g in pairs(v.grades) do
-					gradesTable[h] = {name = g.name, isBoss = g.isboss}
+				for _, g in pairs(v.grades) do
+					gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
 				table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 			end
@@ -1184,14 +1185,12 @@ CreateThread(function()
 			local validJobs = {}
 			local function filterJobs(jobs)
 				local validJobs = {}
+				local gradesTable = {}
 				for jobName, jobData in pairs(jobs) do
-					for h, j in pairs(jobData.grades) do
-						if j.isboss then
-							jobData.grades[h].isBoss = j.isboss
-						end
-						j.isboss = nil
+					for _, g in pairs(jobData.grades) do
+						gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
-					table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = jobData.grades})
+					table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = gradesTable})
 				end
 				return validJobs
 			end
@@ -1213,15 +1212,13 @@ CreateThread(function()
 			local originalData = LoadResourceFile('qb-core', './shared/gangs.lua')
 			local validGangs = {}
 			local function filterGangs(gangs)
+				local gradesTable = {}
 				local validGangs = {}
 				for gangName, gangData in pairs(gangs) do
-					for h, j in pairs(gangData.grades) do
-						if j.isboss then
-							gangData.grades[h].isBoss = j.isboss
-						end
-						j.isboss = nil
+					for _, g in pairs(gangData.grades) do
+						gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
-					table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
+					table.insert(validGangs, {id = gangName, label = gangData.label, grades = gradesTable})
 				end
 				return validGangs
 			end
@@ -1253,7 +1250,6 @@ CreateThread(function()
 			-- Request the hardcoded items from the qb-core shared file (shared/items.lua)
 			local originalData = LoadResourceFile('qb-core', './shared/items.lua')
 			local validItems = {}
-
 			local function filterItems(items)
 				local validItems = {}
 				for itemName, itemData in pairs(items) do
