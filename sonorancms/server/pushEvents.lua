@@ -1167,7 +1167,7 @@ CreateThread(function()
 			for i, v in pairs(QBCore.Shared.Jobs) do
 				local gradesTable = {}
 				for _, g in pairs(v.grades) do
-					gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
+					table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
 				table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 			end
@@ -1176,7 +1176,7 @@ CreateThread(function()
 			for i, v in pairs(QBCore.Shared.Gangs) do
 				local gradesTable = {}
 				for _, g in pairs(v.grades) do
-					gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
+					table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
 				table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 			end
@@ -1188,7 +1188,7 @@ CreateThread(function()
 				local gradesTable = {}
 				for jobName, jobData in pairs(jobs) do
 					for _, g in pairs(jobData.grades) do
-						gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
+						table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
 					table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = gradesTable})
 				end
@@ -1216,7 +1216,7 @@ CreateThread(function()
 				local validGangs = {}
 				for gangName, gangData in pairs(gangs) do
 					for _, g in pairs(gangData.grades) do
-						gradesTable.insert({name = g.name, payment = g.payment, isBoss = g.isboss})
+						table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
 					table.insert(validGangs, {id = gangName, label = gangData.label, grades = gradesTable})
 				end
