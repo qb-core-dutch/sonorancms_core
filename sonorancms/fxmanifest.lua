@@ -7,7 +7,7 @@ description 'Sonoran CMS to FiveM translation layer'
 version '1.2.5'
 lua54 'yes'
 
-server_scripts {'server/*.lua', 'config.lua', 'server/util/unzip.js', 'server/util/http.js', 'server/util/sonoran.js', 'server/util/utils.js', '@oxmysql/lib/MySQL.lua', 'server/imageHost.lua', 'server/util/imageHandler.js'}
+server_scripts {'server/*.lua', 'config.lua', 'server/util/unzip.js', 'server/util/http.js', 'server/util/sonoran.js', 'server/util/utils.js', '@oxmysql/lib/MySQL.lua', 'server/util/imageHandler.js'}
 client_scripts {'client/*.lua'}
 ui_page 'nui/index.html'
 dependency '/assetpacks'
