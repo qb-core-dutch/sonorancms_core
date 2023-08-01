@@ -1121,11 +1121,11 @@ CreateThread(function()
 					v.money = json.decode(v.money)
 					v.inventory = json.decode(v.inventory)
 					sortArrayBy(v.inventory, 'slot')
-					for slot, item in pairs(v.inventory) do
+					for _, item in pairs(v.inventory) do
 						-- local item = QBCore.Shared.Items[itemData]
 						if item then
 							table.insert(playerInventory,
-							             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+							             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
 								unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
 								combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
 						else
@@ -1339,11 +1339,11 @@ function manuallySendPayload()
 				v.money = json.decode(v.money)
 				v.inventory = json.decode(v.inventory)
 				sortArrayBy(v.inventory, 'slot')
-				for slot, item in pairs(v.inventory) do
+				for _, item in pairs(v.inventory) do
 					-- local item = QBCore.Shared.Items[itemData]
 					if item then
 						table.insert(playerInventory,
-						             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
 							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
 							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
 					else
