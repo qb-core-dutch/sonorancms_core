@@ -68,21 +68,6 @@ local function sortArrayBy(array, key)
 	end)
 end
 
---- Finds an item in QB Core via its label
----@param items table
----@param searchLabel string
----@return table
----@return nil
-local function findItemByLabel(items, searchLabel)
-	print(searchLabel)
-	for _, item in pairs(items) do
-		if item.label == searchLabel then
-			return item -- Found the item with the matching label
-		end
-	end
-	return nil -- Item with the specified label not found
-end
-
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -1134,7 +1119,6 @@ CreateThread(function()
 					v.inventory = json.decode(v.inventory)
 					sortArrayBy(v.inventory, 'slot')
 					for _, item in pairs(v.inventory) do
-						print(json.encode(item))
 						local QBItems = QBCore.Shared.Items
 						local QBItem = {}
 						if item.name then
