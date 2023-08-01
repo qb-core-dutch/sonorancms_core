@@ -52,6 +52,22 @@ local function encodeCombinable(combinableData)
 	return combinableLine
 end
 
+--- Encodes the combinale array for items to be correct
+---@param combinableData table
+---@return string
+local function sortByKey(a, b, key)
+	return a[key] < b[key]
+end
+
+--- Encodes the combinale array for items to be correct
+---@param combinableData table
+---@return string
+local function sortArrayBy(array, key)
+	table.sort(array, function(a, b)
+		return sortByKey(a, b, key)
+	end)
+end
+
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -1057,6 +1073,7 @@ CreateThread(function()
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId .. ' but no player found.')
 				else
 					local inventoryToSet = data.data.slots or {}
+					print(json.encode(inventoryToSet))
 					local player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Attempting to find character with citizenId: ' .. data.data.citizenId .. ' to edit inventory.')
 					if player then
@@ -1103,6 +1120,7 @@ CreateThread(function()
 					v.job = json.decode(v.job)
 					v.money = json.decode(v.money)
 					v.inventory = json.decode(v.inventory)
+					sortArrayBy(v.inventory, 'slot')
 					for slot, item in pairs(v.inventory) do
 						-- local item = QBCore.Shared.Items[itemData]
 						if item then
@@ -1320,6 +1338,7 @@ function manuallySendPayload()
 				v.job = json.decode(v.job)
 				v.money = json.decode(v.money)
 				v.inventory = json.decode(v.inventory)
+				sortArrayBy(v.inventory, 'slot')
 				for slot, item in pairs(v.inventory) do
 					-- local item = QBCore.Shared.Items[itemData]
 					if item then
