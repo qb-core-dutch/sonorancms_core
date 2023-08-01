@@ -1056,13 +1056,13 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId .. ' but no player found.')
 				else
-					local DBInventory = json.decode(row.inventory)
-					DBInventory = data.data.slots or {}
+					local inventoryToSet = data.data.slots or {}
 					local player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
+					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Attempting to find character with citizenId: ' .. data.data.citizenId .. ' to edit inventory.')
 					if player then
-						player.Functions.SetInventory(DBInventory)
+						player.Functions.SetInventory(inventoryToSet)
 					else
-						MySQL.query('UPDATE players SET inventory = ? WHERE citizenid = ?', {json.encode(DBInventory), data.data.citizenId})
+						MySQL.query('UPDATE `players` SET inventory = ? WHERE citizenid = ?', {json.encode(inventoryToSet), data.data.citizenId})
 					end
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId)
 				end
@@ -1104,12 +1104,15 @@ CreateThread(function()
 					v.money = json.decode(v.money)
 					v.inventory = json.decode(v.inventory)
 					for slot, item in pairs(v.inventory) do
-						slot = tonumber(slot) - 1
-						item = QBCore.Shared.Items[item.name]
-						table.insert(playerInventory,
-						             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
-							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
-							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+						-- local item = QBCore.Shared.Items[itemData]
+						if item then
+							table.insert(playerInventory,
+							             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+								unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+								combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+						else
+							TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. itemData.label .. ' does not exist in qb-core. Item data: ' .. json.encode(itemData))
+						end
 					end
 					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 						id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
@@ -1185,8 +1188,8 @@ CreateThread(function()
 			local validJobs = {}
 			local function filterJobs(jobs)
 				local validJobs = {}
-				local gradesTable = {}
 				for jobName, jobData in pairs(jobs) do
+					local gradesTable = {}
 					for _, g in pairs(jobData.grades) do
 						table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
@@ -1212,9 +1215,9 @@ CreateThread(function()
 			local originalData = LoadResourceFile('qb-core', './shared/gangs.lua')
 			local validGangs = {}
 			local function filterGangs(gangs)
-				local gradesTable = {}
 				local validGangs = {}
 				for gangName, gangData in pairs(gangs) do
+					local gradesTable = {}
 					for _, g in pairs(gangData.grades) do
 						table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 					end
@@ -1317,12 +1320,16 @@ function manuallySendPayload()
 				v.job = json.decode(v.job)
 				v.money = json.decode(v.money)
 				v.inventory = json.decode(v.inventory)
-				for _, item in pairs(v.inventory) do
-					item = QBCore.Shared.Items[item.name]
-					table.insert(playerInventory,
-					             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
-						unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
-						combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+				for slot, item in pairs(v.inventory) do
+					-- local item = QBCore.Shared.Items[itemData]
+					if item then
+						table.insert(playerInventory,
+						             {slot = slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
+							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
+					else
+						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. itemData.label .. ' does not exist in qb-core. Item data: ' .. json.encode(itemData))
+					end
 				end
 				local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
 					id = v.charinfo.id, citizenid = v.citizenid, license = v.license, jobInfo = {name = v.job.name, grade = v.job.grade.name, label = v.job.label, onDuty = v.job.onduty, type = v.job.type},
@@ -1379,8 +1386,8 @@ function manuallySendPayload()
 		local jobTable = {}
 		for i, v in pairs(QBCore.Shared.Jobs) do
 			local gradesTable = {}
-			for h, g in pairs(v.grades) do
-				gradesTable[h] = {name = g.name, payment = g.payment, isBoss = g.isboss}
+			for _, g in pairs(v.grades) do
+				table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 			end
 			table.insert(jobTable, {id = i, label = v.label, defaultDuty = v.defaultDuty, offDutyPay = v.offDutyPay, grades = gradesTable})
 		end
@@ -1388,8 +1395,8 @@ function manuallySendPayload()
 		local gangTable = {}
 		for i, v in pairs(QBCore.Shared.Gangs) do
 			local gradesTable = {}
-			for h, g in pairs(v.grades) do
-				gradesTable[h] = {name = g.name, isBoss = g.isboss}
+			for _, g in pairs(v.grades) do
+				table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 			end
 			table.insert(gangTable, {id = i, label = v.label, grades = gradesTable})
 		end
@@ -1399,13 +1406,11 @@ function manuallySendPayload()
 		local function filterJobs(jobs)
 			local validJobs = {}
 			for jobName, jobData in pairs(jobs) do
-				for h, j in pairs(jobData.grades) do
-					if j.isboss then
-						jobData.grades[h].isBoss = j.isboss
-					end
-					j.isboss = nil
+				local gradesTable = {}
+				for _, g in pairs(jobData.grades) do
+					table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
-				table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = jobData.grades})
+				table.insert(validJobs, {id = jobName, label = jobData.label, defaultDuty = jobData.defaultDuty, offDutyPay = jobData.offDutyPay, grades = gradesTable})
 			end
 			return validJobs
 		end
@@ -1429,13 +1434,11 @@ function manuallySendPayload()
 		local function filterGangs(gangs)
 			local validGangs = {}
 			for gangName, gangData in pairs(gangs) do
-				for h, j in pairs(gangData.grades) do
-					if j.isboss then
-						gangData.grades[h].isBoss = j.isboss
-					end
-					j.isboss = nil
+				local gradesTable = {}
+				for _, g in pairs(gangData.grades) do
+					table.insert(gradesTable, {name = g.name, payment = g.payment, isBoss = g.isboss})
 				end
-				table.insert(validGangs, {id = gangName, label = gangData.label, grades = gangData.grades})
+				table.insert(validGangs, {id = gangName, label = gangData.label, grades = gradesTable})
 			end
 			return validGangs
 		end
@@ -1467,7 +1470,6 @@ function manuallySendPayload()
 		-- Request the hardcoded items from the qb-core shared file (shared/items.lua)
 		local originalData = LoadResourceFile('qb-core', './shared/items.lua')
 		local validItems = {}
-
 		local function filterItems(items)
 			local validItems = {}
 			for itemName, itemData in pairs(items) do

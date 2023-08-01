@@ -108,7 +108,6 @@ RegisterNetEvent('SonoranCMS::pushevents::UnitLogout', function(accID)
 end)
 
 RegisterNetEvent('sonorancms::RegisterPushEvent', function(type, event)
-	print('Registered event ' .. type .. ' to SonoranCMS')
 	plugin_handlers[type] = event
 end)
 
