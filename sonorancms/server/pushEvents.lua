@@ -68,6 +68,21 @@ local function sortArrayBy(array, key)
 	end)
 end
 
+--- Finds an item in QB Core via its label
+---@param items table
+---@param searchLabel string
+---@return table
+---@return nil
+local function findItemByLabel(items, searchLabel)
+	print(searchLabel)
+	for _, item in pairs(items) do
+		if item.label == searchLabel then
+			return item -- Found the item with the matching label
+		end
+	end
+	return nil -- Item with the specified label not found
+end
+
 CreateThread(function()
 	TriggerEvent('sonorancms::RegisterPushEvent', 'CMD_KICK_PLAYER', function(data)
 		if data ~= nil then
@@ -264,8 +279,8 @@ CreateThread(function()
 					end
 					MySQL.update(
 									'UPDATE player_vehicles SET plate = ?, garage = ?, fuel = ?, engine = ?, body = ?, state = ?, drivingdistance = ?, balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE id = ?',
-									{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.drivingdistance, vehData.balance, vehData.paymentamount, vehData.paymentsleft, vehData.financetime,
-										data.data.vehicleId}, function(affectedRows)
+									{vehData.plate, vehData.garage, vehData.fuel, vehData.engine, vehData.body, vehData.state, vehData.drivingdistance, vehData.balance, vehData.paymentamount, vehData.paymentsleft,
+										vehData.financetime, data.data.vehicleId}, function(affectedRows)
 										TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Updated vehicle metadata for ' .. data.data.vehicleId .. ' to ' .. json.encode(vehData) .. ' with ' .. affectedRows .. ' rows affected')
 									end)
 					manuallySendPayload()
@@ -1073,11 +1088,11 @@ CreateThread(function()
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId .. ' but no player found.')
 				else
 					local inventoryToSet = data.data.slots or {}
-					print(json.encode(inventoryToSet))
 					local player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Attempting to find character with citizenId: ' .. data.data.citizenId .. ' to edit inventory.')
 					if player then
-						player.Functions.SetInventory(inventoryToSet)
+						player.Functions.SetInventory(inventoryToSet, false)
+						QBCore.Player.SaveInventory(player.PlayerData.source)
 					else
 						MySQL.query('UPDATE `players` SET inventory = ? WHERE citizenid = ?', {json.encode(inventoryToSet), data.data.citizenId})
 					end
@@ -1085,9 +1100,6 @@ CreateThread(function()
 				end
 			end)
 		end
-	end)
-	TriggerEvent('sonorancms::RegisterPushEvent', 'UPLOAD_ITEM_IMAGE', function(data)
-		print(json.encode(data))
 	end)
 end)
 
@@ -1109,7 +1121,7 @@ CreateThread(function()
 		end
 		if Config.framework == 'qb-core' then
 			-- Getting QBCore object
-			QBCore = exports['qb-core']:GetCoreObject()
+			local QBCore = exports['qb-core']:GetCoreObject()
 			-- Query the DB for QB Players rather than using the function because the function only returns active ones
 			local qbCharacters = {}
 			MySQL.query('SELECT * FROM `players`', function(row)
@@ -1122,14 +1134,19 @@ CreateThread(function()
 					v.inventory = json.decode(v.inventory)
 					sortArrayBy(v.inventory, 'slot')
 					for _, item in pairs(v.inventory) do
-						-- local item = QBCore.Shared.Items[itemData]
+						print(json.encode(item))
+						local QBItems = QBCore.Shared.Items
+						local QBItem = {}
+						if item.name then
+						QBItem = QBItems[item.name:lower()]
+						end
 						if item then
 							table.insert(playerInventory,
-							             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
-								unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+							             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or QBItem.label or 'Unknown', description = item.description or '', weight = item.weight or 0,
+								type = item.type, unique = item.unique or false, image = item.image or QBItem.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
 								combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
 						else
-							TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. itemData.label .. ' does not exist in qb-core. Item data: ' .. json.encode(itemData))
+							TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. item.label .. ' does not exist in qb-core. Item data: ' .. json.encode(item))
 						end
 					end
 					local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
@@ -1327,7 +1344,7 @@ function manuallySendPayload()
 	end
 	if Config.framework == 'qb-core' then
 		-- Getting QBCore object
-		QBCore = exports['qb-core']:GetCoreObject()
+		local QBCore = exports['qb-core']:GetCoreObject()
 		-- Query the DB for QB Players rather than using the function because the function only returns active ones
 		local qbCharacters = {}
 		MySQL.query('SELECT * FROM `players`', function(row)
@@ -1340,14 +1357,15 @@ function manuallySendPayload()
 				v.inventory = json.decode(v.inventory)
 				sortArrayBy(v.inventory, 'slot')
 				for _, item in pairs(v.inventory) do
-					-- local item = QBCore.Shared.Items[itemData]
+					local QBItems = QBCore.Shared.Items
+					local QBItem = QBItems[item.name:lower()]
 					if item then
 						table.insert(playerInventory,
-						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or 'Unknown', description = item.description or '', weight = item.weight or 0, type = item.type,
-							unique = item.unique or false, image = item.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
+						             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or QBItem.label or 'Unknown', description = item.description or '', weight = item.weight or 0,
+							type = item.type, unique = item.unique or false, image = item.image or QBItem.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
 							combinable = v.combinable and {accept = item.combinable.accept, reward = item.combinable.reward, anim = item.combinable.anim} or nil})
 					else
-						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. itemData.label .. ' does not exist in qb-core. Item data: ' .. json.encode(itemData))
+						TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Error: Item ' .. item.label .. ' does not exist in qb-core. Item data: ' .. json.encode(item))
 					end
 				end
 				local charInfo = {firstname = v.charinfo.firstname, lastname = v.charinfo.lastname, dob = v.charinfo.birthdate, offline = true, name = v.charinfo.firstname .. ' ' .. v.charinfo.lastname,
