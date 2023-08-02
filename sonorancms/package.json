@@ -3,6 +3,9 @@
     "dependencies": {
         "@sonoransoftware/sonoran.js": "^1.0.16",
         "extract-zip": "^2.0.1",
+        "formidable": "^3.5.0",
+        "image-size": "^1.0.2",
+        "luaparse": "^0.3.1",
         "unzipper": "github:ZJONSSON/node-unzipper"
     }
 }
