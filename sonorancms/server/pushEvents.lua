@@ -1072,14 +1072,18 @@ CreateThread(function()
 				if not row then
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId .. ' but no player found.')
 				else
-					local inventoryToSet = data.data.slots or {}
 					local player = QBCore.Functions.GetPlayerByCitizenId(data.data.citizenId)
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Attempting to find character with citizenId: ' .. data.data.citizenId .. ' to edit inventory.')
 					if player then
-						player.Functions.SetInventory(inventoryToSet, false)
-						QBCore.Player.SaveInventory(player.PlayerData.source)
+						player.Functions.ClearInventory();
+						for _, item in pairs(data.data.slots) do
+							if item.name then
+								player.Functions.AddItem(item.name, item.amount, item.slot, item.info or {})
+							end
+						end
+						-- exports['qb-inventory']:SetInventory(player.PlayerData.source, data.data.slots)
 					else
-						MySQL.query('UPDATE `players` SET inventory = ? WHERE citizenid = ?', {json.encode(inventoryToSet), data.data.citizenId})
+						MySQL.query('UPDATE `players` SET inventory = ? WHERE citizenid = ?', {json.encode(data.data.slots), data.data.citizenId})
 					end
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId)
 				end
