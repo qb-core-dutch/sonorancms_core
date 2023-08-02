@@ -153,6 +153,10 @@ CreateThread(function()
 		errorLog('addonupdates folder was not found! Creating now... Please do not delete!')
 		exports['sonorancms']:makeDir(GetResourcePath('sonorancms') .. '/addonupdates')
 	end
+	if exists(GetResourcePath('sonorancms') .. '/config.NEW.lua') then
+		errorLog('config.NEW.lua was found! Please copy over the new config and then delete this file!')
+		return
+	end
 	RegisterNetEvent('SonoranCMS::Started')
 	Wait(5000)
 	TriggerEvent('SonoranCMS::Started')
