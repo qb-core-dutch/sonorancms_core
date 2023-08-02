@@ -1085,6 +1085,7 @@ CreateThread(function()
 					else
 						MySQL.query('UPDATE `players` SET inventory = ? WHERE citizenid = ?', {json.encode(data.data.slots), data.data.citizenId})
 					end
+					manuallySendPayload()
 					TriggerEvent('SonoranCMS::core:writeLog', 'debug', 'Received push event: ' .. data.type .. ' editing inventory for ' .. data.data.citizenId)
 				end
 			end)
