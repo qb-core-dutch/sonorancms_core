@@ -44,6 +44,23 @@ exports('UnzipFile', (file, dest, type) => {
 		try {
 			fs.createReadStream(file).pipe(unzipper.Extract({ path: dest }).on('close', () => {
 				exports[GetCurrentResourceName()].unzipCoreCompleted(true);
+			// TODO: This is a work in progress to allow for updating the config.lua file
+			// type = '[sonorancms]'
+			// let tempFolder = GetResourcePath(GetCurrentResourceName()) + '/temp/' + type;
+			// if (fs.existsSync(tempFolder)) { rmdirRecursive(tempFolder) };
+			// fs.mkdirSync(tempFolder);
+			// fs.createReadStream(file).pipe(unzipper.Extract({ path: tempFolder }).on('close', () => {
+			// 	const configLuaPath = tempFolder + '/config.lua';
+			// 	const configNewLuaPath = tempFolder + '/config.NEW.lua';
+			// 	if (fs.existsSync(configLuaPath)) {
+			// 		fs.renameSync(configLuaPath, configNewLuaPath);
+			// 	} else {
+			// 		console.log('config.lua file not found in the folder.');
+			// 	}
+			// 	const folder = fs.readdirSync(tempFolder);
+			// 	moveFiles(tempFolder + '/' + folder, dest);
+			// 	rmdirRecursive(tempFolder);
+			// 	exports[GetCurrentResourceName()].unzipCoreCompleted(true, 'nil');
 			}))
 		} catch (ex) {
 			exports[GetCurrentResourceName()].unzipCoreCompleted(false, ex);

@@ -136,10 +136,10 @@ CreateThread(function()
 			return
 		end
 		Config.apiVersion = tonumber(string.sub(result, 1, 1))
-		if Config.apiVersion < 2 then
-			logError('API_PAID_ONLY')
-			Config.critError = true
-		end
+		-- if Config.apiVersion < 2 then
+		-- 	logError('API_PAID_ONLY')
+		-- 	Config.critError = true
+		-- end
 		debugLog(('Set version %s from response %s'):format(Config.apiVersion, result))
 		infoLog(('Loaded community ID %s with API URL: %s'):format(Config.CommID, Config.apiUrl))
 	end)
@@ -152,6 +152,10 @@ CreateThread(function()
 	if not exists(GetResourcePath('sonorancms') .. '/addonupdates') then
 		errorLog('addonupdates folder was not found! Creating now... Please do not delete!')
 		exports['sonorancms']:makeDir(GetResourcePath('sonorancms') .. '/addonupdates')
+	end
+	if exists(GetResourcePath('sonorancms') .. '/config.NEW.lua') then
+		errorLog('config.NEW.lua was found! Please copy over the new config and then delete this file!')
+		return
 	end
 	RegisterNetEvent('SonoranCMS::Started')
 	Wait(5000)
