@@ -1104,7 +1104,7 @@ CreateThread(function()
 			Wait(5000)
 			first = false
 		end
-		if not Config.critError then
+		if not Config.critErrorGamestate then
 			manuallySendPayload()
 		else
 			TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping QBCore Game Panel payload send due to critical error. If you do not use the QBCore Game Panel you can ignore this.')
@@ -1117,12 +1117,12 @@ end)
 function manuallySendPayload()
 	if GetResourceState('qb-core') ~= 'started' then
 		TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping payload send due to qb-core not being started. If you do not use the QBCore Game Panel you can ignore this.')
-		Config.critError = true
+		Config.critErrorGamestate = true
 		return
 	end
 	if GetResourceState('qb-inventory') ~= 'started' and GetResourceState('ox_inventory') ~= 'started' then
 		TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping payload send due to qb-inventory and ox_inventory not being started. If you do not use the QBCore Game Panel you can ignore this.')
-		Config.critError = true
+		Config.critErrorGamestate = true
 		return
 	end
 	if GetResourceState('qb-garages') ~= 'started' and GetResourceState('cd_garage') ~= 'started' and GetResourceState('qs-advancedgarages') ~= 'started' then
@@ -1132,10 +1132,10 @@ function manuallySendPayload()
 	if GetResourceState('oxmysql') ~= 'started' and GetResourceState('mysql-async') ~= 'started' and GetResourceState('ghmattimysql') ~= 'started' then
 		TriggerEvent('SonoranCMS::core:writeLog', 'error',
 		             'Skipping payload send due to oxmysql, mysql-async, and ghmattimysql not being started. If you do not use the QBCore Game Panel you can ignore this.')
-		Config.critError = true
+		Config.critErrorGamestate = true
 		return
 	end
-	if Config.critError then
+	if Config.critErrorGamestate then
 		TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping QBCore Game Panel payload send due to critical error. If you do not use the QBCore Game Panel you can ignore this.')
 		return
 	else
@@ -1385,7 +1385,7 @@ function manuallySendPayload()
 				Utilities.Logging.logDebug('API Response: ' .. result .. ' ' .. tostring(ok))
 				if not ok then
 					logError('API_ERROR')
-					Config.critError = true
+					Config.critErrorGamestate = true
 					return
 				end
 			end)
