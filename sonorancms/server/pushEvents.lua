@@ -1171,7 +1171,7 @@ function manuallySendPayload()
 						if item.name then
 							QBItem = QBItems[item.name:lower()]
 						end
-						if item then
+						if item and QBItem and next(QBItem) ~= nil then
 							table.insert(playerInventory,
 							             {slot = item.slot, name = item.name, amount = item.amount, label = item.label or QBItem.label or 'Unknown', description = item.description or '', weight = item.weight or 0,
 								type = item.type, unique = item.unique or false, image = item.image or QBItem.image or '', info = item.info or {}, shouldClose = item.shouldClose or false,
