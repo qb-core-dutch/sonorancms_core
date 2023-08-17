@@ -1120,8 +1120,8 @@ function manuallySendPayload()
 		Config.critErrorGamestate = true
 		return
 	end
-	if GetResourceState('qb-inventory') ~= 'started' and GetResourceState('ox_inventory') ~= 'started' then
-		TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping payload send due to qb-inventory and ox_inventory not being started. If you do not use the QBCore Game Panel you can ignore this.')
+	if GetResourceState('qb-inventory') ~= 'started' and GetResourceState('lj-inventory') ~= 'started' and GetResourceState('ox_inventory') ~= 'started' then
+		TriggerEvent('SonoranCMS::core:writeLog', 'error', 'Skipping payload send due to qb-inventory and ox_inventory or lj-inventory not being started. If you do not use the QBCore Game Panel you can ignore this.')
 		Config.critErrorGamestate = true
 		return
 	end
